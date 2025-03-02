@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from .http.config import configure_app
+from .http.config import configure_app, lifespan
 from .core.config import settings
 
 
@@ -12,6 +12,7 @@ def create_app() -> FastAPI:
         docs_url=f"/api/docs",
         redoc_url=f"/api/redocs",
         openapi_url=f"/api/docs/openapi.json",
+        lifespan=lifespan
     )
 
     configure_app(app)
