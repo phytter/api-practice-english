@@ -5,6 +5,8 @@ from app.config import (
     stop_mongo,
     start_logging,
     stop_logging,
+    start_http_client,
+    stop_http_client,
 )
 from contextlib import asynccontextmanager
 
@@ -25,12 +27,15 @@ def configure_middlewares(app: FastAPI):
   )
 
 async def startup_event():
+    start_logging()
     await start_mongo()
+    await start_http_client()
 
 
 async def shutdown_event():
     await stop_mongo()
-    stop_logging()
+    await stop_http_client()
+    await stop_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -43,7 +48,6 @@ def configure_routes(app: FastAPI):
   app.include_router(auth_v1)
 
 def configure_app(app: FastAPI):
-    start_logging()
 
     configure_middlewares(app)
     configure_routes(app)
