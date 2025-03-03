@@ -36,6 +36,8 @@ class Mongo:
         cls.client = AsyncIOMotorClient(settings.MONGODB_URL, tz_aware=True)
         cls.db = cls.client.get_default_database(settings.DATABASE_NAME)
 
+        cls.users = cls.db["users"]
+
     @classmethod
     def _shutdown(cls) -> None:
         if cls.client is None:

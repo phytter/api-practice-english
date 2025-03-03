@@ -2,7 +2,7 @@ from typing import Any, Callable, Type
 
 import pydantic
 
-from app.model.base import ObjectIdStr
+from app.model.base import MongoObjectId
 from pydantic.v1.json import ENCODERS_BY_TYPE
 
 
@@ -18,8 +18,8 @@ def generate_projection_model(model_name, projection: dict = {}):
         fields[field] = (Any, pydantic.Field(None))
 
     fields["id"] = (
-        ObjectIdStr,
-        pydantic.Field(..., default_factory=ObjectIdStr, alias="_id"),
+        MongoObjectId,
+        pydantic.Field(..., default_factory=MongoObjectId, alias="_id"),
     )
 
     return pydantic.create_model(model_name, **fields)
