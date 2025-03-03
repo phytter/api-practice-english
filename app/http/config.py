@@ -1,6 +1,11 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.config.mongo import start_mongo, stop_mongo
+from app.config import (
+    start_mongo,
+    stop_mongo,
+    start_logging,
+    stop_logging,
+)
 from contextlib import asynccontextmanager
 
 from .rest.v1 import (
@@ -25,6 +30,7 @@ async def startup_event():
 
 async def shutdown_event():
     await stop_mongo()
+    stop_logging()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -37,6 +43,7 @@ def configure_routes(app: FastAPI):
   app.include_router(auth_v1)
 
 def configure_app(app: FastAPI):
+    start_logging()
 
     configure_middlewares(app)
     configure_routes(app)
