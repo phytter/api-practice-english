@@ -31,7 +31,7 @@ class Mongo:
         if cls.client is not None:
             raise RuntimeError("Database has already been started")
 
-        logger.info("Starting MongoDB database: %s", settings.MONGODB_URL)
+        logger.info("Starting MongoDB database: %s %s", settings.MONGODB_URL, settings.DATABASE_NAME)
 
         cls.client = AsyncIOMotorClient(settings.MONGODB_URL, tz_aware=True)
         cls.db = cls.client.get_default_database(settings.DATABASE_NAME)
