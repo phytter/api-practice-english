@@ -1,5 +1,5 @@
-from .auth import AuthBusiness
-from .movie import MovieBusiness
+from .auth_bo import AuthBusiness
+from .movie_bo import MovieBusiness
 
 __all__ = (
   "AuthBusiness",

@@ -10,7 +10,7 @@ import os
 logger = logging.getLogger(__name__)
 os.environ["ENV_FILE"] = ".env.test"
 
-@pytest_asyncio.fixture(scope="function")
+@pytest_asyncio.fixture(scope="session")
 async def test_app():
 
     from app.main import app
@@ -26,7 +26,7 @@ async def test_app():
 
         yield manager.app
 
-@pytest_asyncio.fixture(scope="function")
+@pytest_asyncio.fixture(scope="session")
 async def client(test_app):
     async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as client:
         yield client

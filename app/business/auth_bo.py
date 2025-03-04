@@ -22,31 +22,30 @@ class AuthBusiness:
                     status_code=status.HTTP_400_BAD_REQUEST,
                     detail="Invalid issuer."
                 )
+            google_id = idinfo['sub']
 
-            user_data = UserIn(
-                email=idinfo['email'],
-                name=idinfo['name'],
-                picture=idinfo.get('picture'),
-                google_id=idinfo['sub']
-            )
-
-            user = await Mongo.users.find_one({"google_id": user_data.google_id})
+            user = await Mongo.users.find_one({"google_id": google_id})
             
             if not user:
-                user = UserOut(
-                    **user_data.model_dump(),
+                user_data = UserIn(
+                    email=idinfo['email'],
+                    name=idinfo['name'],
+                    picture=idinfo.get('picture'),
+                    google_id=idinfo['sub'],
                     achievements=[],
                     created_at=datetime.now(timezone.utc),
                     last_login=datetime.now(timezone.utc)
                 )
-                await Mongo.users.insert_one(user.model_dump())
+                await Mongo.users.insert_one(user_data.model_dump())
+                user = await Mongo.users.find_one({"google_id": google_id})
             else:
                 # Update last login
                 await Mongo.users.update_one(
-                    {"google_id": user_data.google_id},
+                    {"google_id": google_id },
                     {"$set": {"last_login": datetime.now(timezone.utc)}}
                 )
-                user = UserOut(**user)
+            
+            user = UserOut(**user)
 
             # Create access token
             access_token = self.create_access_token(data={"sub": str(user.id)})
