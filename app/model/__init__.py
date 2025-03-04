@@ -1,6 +1,7 @@
 from .auth import GoogleLoginData
 from .base import PyObjectId, ObjectId 
 from .user import UserIn, UserOut, UserUpdate
+from .movie import MovieSearchOut, MovieIn
 
 __all__ = (
     "ObjectId",
@@ -9,4 +10,6 @@ __all__ = (
     "UserIn",
     "UserOut",
     "UserUpdate",
+    "MovieSearchOut",
+    "MovieIn",
 )

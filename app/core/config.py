@@ -20,6 +20,13 @@ class Settings(BaseSettings):
     GOOGLE_CLIENT_ID: str
     GOOGLE_CLIENT_SECRET: str
     
+    # OpenSubtitles
+    OPENSUBTITLES_API_KEY: str
+    OPENSUBTITLES_API_URL: str = "https://api.opensubtitles.com/api/v1"
+
+    # Movie Service
+    MOVIE_SERVICE: str = "OpenSubTitles"
+
     class Config:
         env_file = ".env"
 

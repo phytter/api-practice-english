@@ -22,7 +22,7 @@ class HttpClient:
     @classmethod
     async def shutdown(cls) -> None:
         if not (session := cls.session):
-            logger.warning("HttpClient alredy stopped!")
+            logger.warning("HttpClient already stopped!")
             return
 
         logger.info("Stopping HttpClient...")
