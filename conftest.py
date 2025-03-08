@@ -3,6 +3,7 @@ from asgi_lifespan import LifespanManager
 from httpx import AsyncClient, ASGITransport
 from aioresponses import aioresponses
 import pytest_asyncio
+import asyncio
 
 import logging
 import os
@@ -31,7 +32,15 @@ async def client(test_app):
     async with AsyncClient(transport=ASGITransport(app=test_app), base_url="http://test") as client:
         yield client
 
-@pytest.fixture(scope="function")
+@pytest.fixture
 def responses():
     with aioresponses() as responses:
         yield responses
+
+@pytest.fixture(scope="session")
+def event_loop():
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
+
+    

@@ -37,14 +37,14 @@ class AuthBusiness:
                     last_login=datetime.now(timezone.utc)
                 )
                 await Mongo.users.insert_one(user_data.model_dump())
-                user = await Mongo.users.find_one({"google_id": google_id})
             else:
                 # Update last login
                 await Mongo.users.update_one(
                     {"google_id": google_id },
                     {"$set": {"last_login": datetime.now(timezone.utc)}}
                 )
-            
+
+            user = await Mongo.users.find_one({"google_id": google_id})
             user = UserOut(**user)
 
             # Create access token
