@@ -37,6 +37,8 @@ class Mongo:
         cls.db = cls.client.get_default_database(settings.DATABASE_NAME)
 
         cls.users = cls.db["users"]
+        cls.movies_processed = cls.db["movies_processed"]
+        cls.dialogues = cls.db["dialogues"]
 
     @classmethod
     def _shutdown(cls) -> None:

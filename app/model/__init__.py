@@ -1,7 +1,8 @@
 from .auth import GoogleLoginData
 from .base import PyObjectId, ObjectId 
 from .user import UserIn, UserOut, UserUpdate
-from .movie import MovieSearchOut, MovieIn
+from .movie import MovieSearchOut, MovieIn, MovieOut
+from .dialogue import Dialogue, DialogueLine
 
 __all__ = (
     "ObjectId",
@@ -12,4 +13,7 @@ __all__ = (
     "UserUpdate",
     "MovieSearchOut",
     "MovieIn",
+    "MovieOut",
+    "Dialogue",
+    "DialogueLine",
 )

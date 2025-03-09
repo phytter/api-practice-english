@@ -19,3 +19,14 @@ async def search_movies(
     query: str,
 ) -> List[MovieSearchOut]:
     return await MovieBusiness.search_movies(query)
+
+@movie_v1.post(
+    "/{imdb_id}/process",
+    response_model=Dict,
+    status_code=200,
+)
+async def process_movie_dialogues(
+    imdb_id: str,
+    language: str = "en",
+) -> Dict:
+    return await MovieBusiness.process_movie_dialogues(imdb_id, language)

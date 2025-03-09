@@ -32,7 +32,6 @@ async def startup_event():
     await start_mongo()
     await start_http_client()
 
-
 async def shutdown_event():
     await stop_mongo()
     await stop_http_client()
