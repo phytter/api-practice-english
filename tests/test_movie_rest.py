@@ -205,3 +205,35 @@ async def test_process_movie_with_cache(client: AsyncClient, responses):
 
     assert res.status_code == 200
     assert json.get('dialogues_count') == 0
+
+async def test_list_processed_movie(client: AsyncClient):
+
+    movie_processed_db = mock_movie_processed_db()
+    await Mongo.movies_processed.insert_one(movie_processed_db)
+
+    res = await client.get(f"{BASE_URL}/processed")
+
+    json_data = res.json()
+
+    assert res.status_code == 200
+    assert len(json_data) == 1
+    assert json_data[0]['title'] == movie_processed_db['title']
+
+async def test_search_processed_movie(client: AsyncClient):
+
+    movie_processed_db = mock_movie_processed_db()
+    await Mongo.movies_processed.insert_one(movie_processed_db)
+
+    res = await client.get(f"{BASE_URL}/processed?search={movie_processed_db['title']}")
+
+    json_data = res.json()
+
+    assert res.status_code == 200
+    assert len(json_data) == 1
+
+    res = await client.get(f"{BASE_URL}/processed?search=not_included")
+
+    json_data = res.json()
+
+    assert res.status_code == 200
+    assert len(json_data) == 0
