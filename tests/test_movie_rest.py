@@ -237,3 +237,38 @@ async def test_search_processed_movie(client: AsyncClient):
 
     assert res.status_code == 200
     assert len(json_data) == 0
+
+async def test_search_processed_movie_with_pagination(client: AsyncClient):
+
+    await Mongo.movies_processed.insert_one(mock_movie_processed_db())
+    await Mongo.movies_processed.insert_one(mock_movie_processed_db())
+
+    res = await client.get(f"{BASE_URL}/processed?limit=1&skip=0")
+
+    json_data = res.json()
+
+    assert res.status_code == 200
+    assert len(json_data) == 1
+
+    res = await client.get(f"{BASE_URL}/processed?limit=2&skip=0")
+
+    json_data = res.json()
+
+    assert res.status_code == 200
+    assert len(json_data) == 2
+
+
+    res = await client.get(f"{BASE_URL}/processed?limit=2&skip=1")
+
+    json_data = res.json()
+
+    assert res.status_code == 200
+    assert len(json_data) == 1
+
+
+    res = await client.get(f"{BASE_URL}/processed?limit=2&skip=2")
+
+    json_data = res.json()
+
+    assert res.status_code == 200
+    assert len(json_data) == 0
