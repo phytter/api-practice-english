@@ -16,7 +16,6 @@ class DialogueMovie(BaseModel):
 
 class Dialogue(BaseModel):
     movie: Optional[DialogueMovie] = None
-    id: Optional[PyObjectId] = Field(alias="_id", default=None)
     difficulty_level: int
     duration_seconds: float 
     lines: List[DialogueLine]
@@ -24,6 +23,9 @@ class Dialogue(BaseModel):
         populate_by_name=True,
         arbitrary_types_allowed=True,
     )
+
+class DialogueOut(Dialogue):
+    id: Optional[MongoObjectId] = Field(alias="_id", default=None)
 
 class DialogueProgress(BaseModel):
     id: Optional[MongoObjectId] = Field(alias="_id", default=None)
