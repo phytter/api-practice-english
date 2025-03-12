@@ -30,7 +30,7 @@ class OpenSubTitles(SubtitleMovies):
                     MovieSearchOut(
                         title=item.get("attributes", {}).get("title"),
                         year=int(item.get("attributes", {}).get("year") or 0),
-                        imdb_id=item.get("attributes", {}).get("imdb_id"),
+                        imdb_id=str(item.get("attributes", {}).get("imdb_id", "")),
                         feature_type=item.get("attributes", {}).get("feature_type", ""),
                         img_url=item.get("attributes", {}).get("img_url"),
                     )                    
@@ -54,7 +54,6 @@ class OpenSubTitles(SubtitleMovies):
             params=params
         ) as response:
             if response.status != 200:
-                print(response.status)
                 raise Exception(f"Failed to get subtitles: {await response.text()}")
             
             data = await response.json()

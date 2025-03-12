@@ -45,12 +45,17 @@ class MovieBusiness:
             "language": language
         }
         
-        for dialogue in dialogues:
-            dialogue_doc = {
+        dialogue_docs = [
+            {
                 **dialogue.model_dump(),
                 "movie": movie_info
             }
-            await Mongo.dialogues.insert_one(dialogue_doc)
+            for dialogue in dialogues
+        ]
+        
+        if dialogue_docs:
+            await Mongo.dialogues.insert_many(dialogue_docs)
+
         return {"message": "Subtitles processed successfully", "dialogues_count": len(dialogues)}
     
     @classmethod

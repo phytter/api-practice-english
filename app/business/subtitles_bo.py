@@ -1,31 +1,8 @@
 import re
-from typing import Dict, List, Optional, Tuple
-from datetime import datetime, timezone
-from app.model import Dialogue, DialogueLine, MovieOut
-from app.integration import Mongo
+from typing import List, Tuple
+from app.model import Dialogue, DialogueLine
 
 class SubtitlesBussiness:
-
-    @classmethod
-    async def _get_from_cache(self, imdb_id: str) -> Optional[MovieOut]:
-
-        cache_item = await Mongo.movies_processed.find_one({
-            "imdb_id": imdb_id,
-        })
-        return cache_item.get("subtitles") if cache_item else None
-
-    @classmethod
-    async def _save_to_cache(self, imdb_id: str, movie_data: Dict):
-        await Mongo.movies_processed.update_one(
-            {"imdb_id": imdb_id},
-            {
-                "$set": {
-                    **movie_data,
-                    "timestamp": datetime.now(timezone.utc)
-                }
-            },
-            upsert=True
-        )  
 
     @classmethod
     def process_subtitle_content(self, content: str) -> List[Dialogue]:
@@ -216,12 +193,13 @@ class SubtitlesBussiness:
         - Number of characters
         - Length of dialogues
         """
+
         if not dialogue_lines:
             return 1
             
         avg_words_per_second = self._calculate_speech_rate(dialogue_lines)
         vocab_complexity = self._calculate_vocab_complexity(dialogue_lines)
-        num_characters = len(set(line.character for line in dialogue_lines))
+        num_characters = len(set(line.character for line in dialogue_lines)) or 2
         avg_line_length = sum(len(line.text.split()) for line in dialogue_lines) / len(dialogue_lines)
         
         # Weight and combine factors
