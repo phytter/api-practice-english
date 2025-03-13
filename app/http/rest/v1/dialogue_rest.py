@@ -1,7 +1,7 @@
 from app.core.config import settings
 from fastapi import APIRouter
 from app.business import DialogueBusiness
-from typing import List, Dict, Optional
+from typing import List, Optional
 from app.model import DialogueOut
 
 
@@ -22,3 +22,13 @@ async def search_dialogues(
     limit: int = 20,
 ) -> List[DialogueOut]:
     return await DialogueBusiness.search_dialogues(search, imdb_id, skip, limit)
+
+@dialogue_v1.get(
+    "/{dialogue_id}",
+    response_model=DialogueOut,
+    status_code=200,
+)
+async def show_dialogue(
+    dialogue_id: str,
+) -> DialogueOut:
+    return await DialogueBusiness.show_dialogue(dialogue_id)

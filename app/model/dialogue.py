@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 from datetime import datetime
-from .base import PyObjectId, MongoObjectId
+from .base import MongoObjectId
 
 class DialogueLine(BaseModel):
     character: Optional[str] = ''
@@ -19,13 +19,14 @@ class Dialogue(BaseModel):
     difficulty_level: int
     duration_seconds: float 
     lines: List[DialogueLine]
+
+class DialogueOut(Dialogue):
+    id: Optional[MongoObjectId] = Field(alias="_id", default=None)
+
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True,
     )
-
-class DialogueOut(Dialogue):
-    id: Optional[MongoObjectId] = Field(alias="_id", default=None)
 
 class DialogueProgress(BaseModel):
     id: Optional[MongoObjectId] = Field(alias="_id", default=None)
@@ -53,6 +54,10 @@ class DialogueProgressOut(BaseModel):
     practice_duration_seconds: float
     character_played: Optional[str] = ''
     xp_earned: Optional[int] = 0
+    model_config = ConfigDict(
+        populate_by_name=True,
+        arbitrary_types_allowed=True,
+    )
 
 class DialoguePractice(BaseModel):
     dialogue_id: str

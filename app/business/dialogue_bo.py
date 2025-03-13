@@ -1,6 +1,7 @@
-from typing import List, Dict, Optional
-from app.model import DialogueOut
+from typing import List
+from app.model import DialogueOut, ObjectId
 from app.integration.mongo import Mongo
+from fastapi import HTTPException, status
 
 class DialogueBusiness:
 
@@ -22,3 +23,13 @@ class DialogueBusiness:
             query["movie.imdb_id"] = imdb_id
         cursor = Mongo.dialogues.find(query).skip(skip).limit(limit)
         return [DialogueOut(**doc) async for doc in cursor]
+    
+    @classmethod
+    async def show_dialogue (cls, dialogue_id: str) -> DialogueOut:
+        dialogue = await Mongo.dialogues.find_one({"_id": ObjectId(dialogue_id)})
+        if not dialogue:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Dialogue not found"
+            )
+        return DialogueOut(**dialogue)

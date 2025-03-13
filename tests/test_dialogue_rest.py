@@ -3,6 +3,7 @@ import pytest_asyncio
 from httpx import AsyncClient
 from app.http.rest.v1 import dialogue_v1
 from app.integration.mongo import Mongo
+from app.model import ObjectId
 
 BASE_URL = dialogue_v1.prefix
 MOVIE_IMDB_ID = "123"
@@ -35,8 +36,8 @@ async def test_search_dialogues_empty_results(client: AsyncClient):
 
 async def test_search_dialogues(client: AsyncClient):
 
-    dilogue_db = mock_dialogue()
-    await Mongo.dialogues.insert_one(dilogue_db)
+    dialogue_db = mock_dialogue()
+    await Mongo.dialogues.insert_one(dialogue_db)
 
     res = await client.get(BASE_URL)
 
@@ -44,12 +45,12 @@ async def test_search_dialogues(client: AsyncClient):
 
     assert res.status_code == 200
     assert len(json_data) == 1
-    assert json_data[0]['movie']['title'] == dilogue_db['movie']['title']
+    assert json_data[0]['movie']['title'] == dialogue_db['movie']['title']
 
 async def test_search_dialogues_with_query(client: AsyncClient):
 
-    dilogue_db = mock_dialogue()
-    await Mongo.dialogues.insert_one(dilogue_db)
+    dialogue_db = mock_dialogue()
+    await Mongo.dialogues.insert_one(dialogue_db)
 
     res = await client.get(f"{BASE_URL}?search=not_included")
 
@@ -58,18 +59,18 @@ async def test_search_dialogues_with_query(client: AsyncClient):
     assert res.status_code == 200
     assert len(json_data) == 0
 
-    res = await client.get(f"{BASE_URL}?search={dilogue_db['movie']['title']}")
+    res = await client.get(f"{BASE_URL}?search={dialogue_db['movie']['title']}")
 
     json_data = res.json()
 
     assert res.status_code == 200
     assert len(json_data) == 1
-    assert json_data[0]['movie']['title'] == dilogue_db['movie']['title']
+    assert json_data[0]['movie']['title'] == dialogue_db['movie']['title']
 
 async def test_search_dialogues_with_imdb(client: AsyncClient):
 
-    dilogue_db = mock_dialogue()
-    await Mongo.dialogues.insert_one(dilogue_db)
+    dialogue_db = mock_dialogue()
+    await Mongo.dialogues.insert_one(dialogue_db)
 
     res = await client.get(f"{BASE_URL}?imdb_id=not_included")
 
@@ -121,3 +122,25 @@ async def test_search_dialogues_with_pagination(client: AsyncClient):
 
     assert res.status_code == 200
     assert len(json_data) == 0
+
+async def test_get_dialogue(client: AsyncClient):
+
+    dialogue_db = mock_dialogue()
+    result = await Mongo.dialogues.insert_one(dialogue_db)
+    dialogue_id = result.inserted_id
+
+    res = await client.get(f"{BASE_URL}/{dialogue_id}")
+
+    json_data = res.json()
+
+    assert res.status_code == 200
+    assert json_data['movie']['imdb_id'] == MOVIE_IMDB_ID
+    assert json_data['_id'] == str(dialogue_id)
+
+    non_existent_id = ObjectId()
+    res = await client.get(f"{BASE_URL}/{non_existent_id}")
+
+    json_data = res.json()
+
+    assert res.status_code == 404
+    assert json_data['detail'] == "Dialogue not found"

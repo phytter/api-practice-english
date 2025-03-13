@@ -5,7 +5,6 @@ from bson import ObjectId
 from app.integration import Mongo
 from app.util import pydantic
 
-
 logger = logging.getLogger(__name__)
 
 
