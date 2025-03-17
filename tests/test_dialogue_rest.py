@@ -1,9 +1,13 @@
 import pytest
 import pytest_asyncio
+from unittest.mock import patch
 from httpx import AsyncClient
 from app.http.rest.v1 import dialogue_v1
 from app.integration.mongo import Mongo
 from app.model import ObjectId
+import io
+from google.cloud import speech_v1
+from pydub import AudioSegment
 
 BASE_URL = dialogue_v1.prefix
 MOVIE_IMDB_ID = "123"
@@ -24,6 +28,112 @@ def mock_dialogue():
       "lines": [{ "character": "", "text": "", "start_time": 10, "end_time": 20 }],
       "duration_seconds": 10
     }
+
+def mock_audio():
+    silent_audio = AudioSegment.silent(duration=1000)  # 1 second of silence
+    audio_file = io.BytesIO()
+    silent_audio.export(audio_file, format="webm")
+    audio_file.name = "audio.webm"
+    audio_file.seek(0)
+    return audio_file
+
+def mock_google_speech_good_result(transcript=""):
+    return speech_v1.RecognizeResponse(
+        results = [
+            speech_v1.SpeechRecognitionResult(
+                alternatives = [speech_v1.SpeechRecognitionAlternative(
+                    confidence = 0.8,
+                    transcript = transcript or "buzz lightyear mission log",
+                    words = [
+                        speech_v1.WordInfo(
+                            word = "Buzz",
+                            start_time = {"seconds": 0, "nanos": 0},
+                            end_time = {"seconds": 0, "nanos": 500000000},
+                        ),
+                        speech_v1.WordInfo(
+                            word = "lightyear",
+                            start_time = {"seconds": 0, "nanos": 500000000},
+                            end_time = {"seconds": 1, "nanos": 0},
+                        ),
+                        speech_v1.WordInfo(
+                            word = "mission",
+                            start_time = {"seconds": 1, "nanos": 0},
+                            end_time = {"seconds": 1, "nanos": 500000000},
+                        ),
+                        speech_v1.WordInfo(
+                            word = "log",
+                            start_time = {"seconds": 1, "nanos": 500000000},
+                            end_time = {"seconds": 2, "nanos": 0},
+                        )
+                    ]
+                )]
+            )
+        ]
+    )
+
+def mock_google_speech_bad_result(transcript=""):
+    return speech_v1.RecognizeResponse(
+        results = [
+            speech_v1.SpeechRecognitionResult(
+                alternatives = [speech_v1.SpeechRecognitionAlternative(
+                    confidence = 0.58,
+                    transcript = transcript or "buzz lightyear mission log as the location of zurg's fortress",
+                    words = [
+                        speech_v1.WordInfo(
+                            word = "Buzz",
+                            start_time = {"seconds": 0, "nanos": 0},
+                            end_time = {"seconds": 0, "nanos": 500000000},
+                        ),
+                        speech_v1.WordInfo(
+                            word = "lightyear",
+                            start_time = {"seconds": 2, "nanos": 500000000},
+                            end_time = {"seconds": 2, "nanos": 0},
+                        ),
+                        speech_v1.WordInfo(
+                            word = "mission",
+                            start_time = {"seconds": 2, "nanos": 500000000},
+                            end_time = {"seconds": 3, "nanos": 500000000},
+                        ),
+                        speech_v1.WordInfo(
+                            word = "log",
+                            start_time = {"seconds": 4, "nanos": 500000000},
+                            end_time = {"seconds": 4, "nanos": 0},
+                        ),
+                        speech_v1.WordInfo(
+                            word = "as",
+                            start_time = {"seconds": 5, "nanos": 0},
+                            end_time = {"seconds": 5, "nanos": 500000000},
+                        ),
+                        speech_v1.WordInfo(
+                            word = "the",
+                            start_time = {"seconds": 6, "nanos": 500000000},
+                            end_time = {"seconds": 6, "nanos": 0},
+                        ),
+                        speech_v1.WordInfo(
+                            word = "location",
+                            start_time = {"seconds": 8, "nanos": 0},
+                            end_time = {"seconds": 9, "nanos": 500000000},
+                        ),
+                        speech_v1.WordInfo(
+                            word = "of",
+                            start_time = {"seconds": 9, "nanos": 500000000},
+                            end_time = {"seconds": 9, "nanos": 0},
+                        ),
+                        speech_v1.WordInfo(
+                            word = "zurg",
+                            start_time = {"seconds": 11, "nanos": 0},
+                            end_time = {"seconds": 12, "nanos": 500000000},
+                        ),
+                        speech_v1.WordInfo(
+                            word = "fortress",
+                            start_time = {"seconds": 12, "nanos": 500000000},
+                            end_time = {"seconds": 13, "nanos": 0},
+                        )
+                    ]
+                )]
+            )
+        ]
+    )
   
 async def test_search_dialogues_empty_results(client: AsyncClient):
 
@@ -144,3 +254,54 @@ async def test_get_dialogue(client: AsyncClient):
 
     assert res.status_code == 404
     assert json_data['detail'] == "Dialogue not found"
+
+async def test_practice_dialogue_not_found_error(client: AsyncClient):
+    audio_file = mock_audio()
+    non_existent_id = ObjectId()
+    res = await client.post(f"{BASE_URL}/{non_existent_id}/practice", files={"audio": (audio_file.name, audio_file, "audio/webm")})
+
+    assert res.status_code == 404
+
+@patch("google.cloud.speech_v1.SpeechClient.recognize")
+async def test_practice_dialogue_positive_return(mock_audio_transcript, client: AsyncClient):
+    mock_audio_transcript.return_value = mock_google_speech_good_result()
+    dialogue_db = mock_dialogue()
+    dialogue_db['lines'] = [
+        { "character": "", "text": "Buzz lightyear mission log", "start_time": 0, "end_time": 2 },
+    ]
+    result = await Mongo.dialogues.insert_one(dialogue_db)
+    dialogue_id = result.inserted_id
+
+    audio_file = mock_audio()
+    res = await client.post(f"{BASE_URL}/{dialogue_id}/practice", files={"audio": (audio_file.name, audio_file, "audio/webm")})
+    result_json = res.json()
+
+    assert res.status_code == 200
+    assert result_json['pronunciation_score'] == 0.8
+    assert result_json['fluency_score'] == 1
+    assert result_json['transcribed_text'] == "buzz lightyear mission log"
+    assert len(result_json['suggestions']) == 0
+    assert len(result_json['word_timings']) == 4
+
+@patch("google.cloud.speech_v1.SpeechClient.recognize")
+async def test_practice_dialogue_suggestions_return(mock_audio_transcript, client: AsyncClient):
+    transcribed_text = "bus light mission lag as the location of zurg's fort"
+    mock_audio_transcript.return_value = mock_google_speech_bad_result(transcribed_text)
+    dialogue_db = mock_dialogue()
+    dialogue_db['lines'] = [
+        { "character": "", "text": "Buzz lightyear mission log", "start_time": 0, "end_time": 2 },
+        { "character": "", "text": "as the location of zurg's fortress", "start_time": 2, "end_time": 4 },
+    ]
+    result = await Mongo.dialogues.insert_one(dialogue_db)
+    dialogue_id = result.inserted_id
+
+    audio_file = mock_audio()
+    res = await client.post(f"{BASE_URL}/{dialogue_id}/practice", files={"audio": (audio_file.name, audio_file, "audio/webm")})
+    result_json = res.json()
+
+    assert res.status_code == 200
+    assert result_json['pronunciation_score'] == 0.58
+    assert result_json['fluency_score'] == 0.2692
+    assert result_json['transcribed_text'] == transcribed_text
+    assert len(result_json['suggestions']) == 6
+    assert len(result_json['word_timings']) == 10

@@ -1,4 +1,4 @@
-from typing import List, Dict
+from typing import List
 from app.integration.http_client import HttpClient
 from app.core.config import settings
 from app.core.ports import SubtitleMovies

@@ -7,6 +7,8 @@ from app.config import (
     stop_logging,
     start_http_client,
     stop_http_client,
+    start_audio_processor,
+    stop_audio_processor
 )
 from contextlib import asynccontextmanager
 
@@ -32,10 +34,12 @@ async def startup_event():
     start_logging()
     await start_mongo()
     await start_http_client()
+    start_audio_processor()
 
 async def shutdown_event():
     await stop_mongo()
     await stop_http_client()
+    stop_audio_processor()
     await stop_logging()
 
 @asynccontextmanager

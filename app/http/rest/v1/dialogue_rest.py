@@ -1,5 +1,5 @@
 from app.core.config import settings
-from fastapi import APIRouter
+from fastapi import APIRouter, File, Form, UploadFile
 from app.business import DialogueBusiness
 from typing import List, Optional
 from app.model import DialogueOut
@@ -32,3 +32,14 @@ async def show_dialogue(
     dialogue_id: str,
 ) -> DialogueOut:
     return await DialogueBusiness.show_dialogue(dialogue_id)
+
+@dialogue_v1.post(
+    "/{dialogue_id}/practice",
+    status_code=200,
+)
+async def practice_dialogue(
+    dialogue_id: str,
+    audio: UploadFile = File(...), 
+) -> None:
+    audio_data = await audio.read()
+    return await DialogueBusiness.proccess_practice_dialogue(dialogue_id, audio_data)
