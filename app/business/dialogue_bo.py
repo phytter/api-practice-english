@@ -46,7 +46,8 @@ class DialogueBusiness:
     async def proccess_practice_dialogue(
         cls,
         dialogue_id: str,
-        audio_data: bytes
+        audio_data: bytes,
+        user: UserOut = None
     ) -> PracticeResult:
         dialogue = await Mongo.dialogues.find_one({"_id": ObjectId(dialogue_id)})
 
@@ -86,17 +87,17 @@ class DialogueBusiness:
             full_dialogue_text
         )
 
-        await cls._save_practice_history(dialogue_id, 'user.id', result)
+        await cls._create_practice_history(dialogue_id, user.id, result)
 
         return result
-    
+
     @classmethod
     async def list_practice_history(cls, skip: int = 0, limit: int = 20, user: UserOut = None) -> List[DialoguePracticeHistoryOut]:
         cursor = Mongo.dialogue_practice_history.find({"user_id": user.id }).skip(skip).limit(limit)
         return [DialoguePracticeHistoryOut(**doc) async for doc in cursor]
 
     @staticmethod
-    async def _save_practice_history(dialogue_id: str, user_id: str, result: PracticeResult) -> None:
+    async def _create_practice_history(dialogue_id: str, user_id: str, result: PracticeResult) -> None:
         try:
             practice_record = DialoguePracticeHistoryIn(
                 dialogue_id=dialogue_id,

@@ -41,10 +41,11 @@ async def show_dialogue(
 )
 async def practice_dialogue(
     dialogue_id: str,
-    audio: UploadFile = File(...), 
+    audio: UploadFile = File(...),
+    user: UserOut = Depends(AuthBusiness.get_current_user) 
 ) -> None:
     audio_data = await audio.read()
-    return await DialogueBusiness.proccess_practice_dialogue(dialogue_id, audio_data)
+    return await DialogueBusiness.proccess_practice_dialogue(dialogue_id, audio_data, user)
 
 @dialogue_v1.get(
     "/practice/history",
