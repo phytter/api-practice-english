@@ -29,10 +29,10 @@ async def search_dialogues(
     response_model=DialogueOut,
     status_code=200,
 )
-async def show_dialogue(
+async def get_dialogue(
     dialogue_id: str,
 ) -> DialogueOut:
-    return await DialogueBusiness.show_dialogue(dialogue_id)
+    return await DialogueBusiness.get_dialogue(dialogue_id)
 
 @dialogue_v1.post(
     "/{dialogue_id}/practice",

@@ -33,7 +33,7 @@ class DialogueBusiness:
         return [DialogueOut(**doc) async for doc in cursor]
     
     @classmethod
-    async def show_dialogue (cls, dialogue_id: str) -> DialogueOut:
+    async def get_dialogue (cls, dialogue_id: str) -> DialogueOut:
         dialogue = await Mongo.dialogues.find_one({"_id": ObjectId(dialogue_id)})
         if not dialogue:
             raise HTTPException(
@@ -49,15 +49,14 @@ class DialogueBusiness:
         audio_data: bytes,
         user: UserOut = None
     ) -> PracticeResult:
-        dialogue = await Mongo.dialogues.find_one({"_id": ObjectId(dialogue_id)})
+        dialogue = await cls.get_dialogue(dialogue_id)
 
         if not dialogue:
             raise HTTPException(
                 status_code=status.HTTP_404_NOT_FOUND,
                 detail="Dialogue not found"
             )
-        
-        full_dialogue_text = " ".join(line['text'] for line in dialogue['lines'])
+
         try:
             transcription_result = await AudioProcessor.client.process_audio_transcript(audio_data)
         except Exception as e:
@@ -75,6 +74,7 @@ class DialogueBusiness:
         }
 
         word_scores = [word_score.get('confidence', 0) for word_score in transcription_result.words]
+        full_dialogue_text = " ".join(line.text for line in dialogue.lines)
 
         if word_scores:
             result["pronunciation_score"] = round(sum(word_scores) / len(word_scores), 4)
@@ -89,7 +89,7 @@ class DialogueBusiness:
         xp_earned = cls._calculate_xp(
             result["pronunciation_score"],
             result["fluency_score"],
-            dialogue["difficulty_level"]
+            dialogue.difficulty_level
         )
 
         result = PracticeResult(
@@ -97,7 +97,7 @@ class DialogueBusiness:
             xp_earned=xp_earned
         )
 
-        await cls._create_practice_history(dialogue_id, user.id, result)
+        await cls._create_practice_history(dialogue, user.id, result)
 
         return result
 
@@ -107,15 +107,16 @@ class DialogueBusiness:
         return [DialoguePracticeHistoryOut(**doc) async for doc in cursor]
 
     @staticmethod
-    async def _create_practice_history(dialogue_id: str, user_id: str, result: PracticeResult) -> None:
+    async def _create_practice_history(dialogue: DialogueOut, user_id: str, result: PracticeResult) -> None:
         try:
+            practice_duration = sum(line.end_time - line.start_time for line in dialogue.lines)
             practice_record = DialoguePracticeHistoryIn(
-                dialogue_id=dialogue_id,
+                dialogue_id=dialogue.id,
                 user_id=user_id,
                 pronunciation_score=result.pronunciation_score,
                 fluency_score=result.fluency_score,
                 completed_at=datetime.now(timezone.utc),
-                practice_duration=0,
+                practice_duration=practice_duration,
                 character_played='',
                 xp_earned=result.xp_earned
             )
