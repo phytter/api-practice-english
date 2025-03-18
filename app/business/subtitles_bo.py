@@ -19,38 +19,6 @@ class SubtitlesBussiness:
             characters = list(set(line.character for line in scene))
         ) for scene in scenes]
 
-    def _group_into_scenes(lines: List[DialogueLine], 
-                          max_gap: float = 5.0,
-                          min_lines: int = 5,
-                          max_duration: float = 180) -> List[List[DialogueLine]]:
-        """
-        Group dialogue lines into scenes based on time gaps and constraints
-        - max_gap: maximum time gap between lines to be considered same scene
-        - min_lines: minimum number of lines for a valid scene
-        - max_duration: maximum duration of a scene in seconds
-        """
-        if not lines:
-            return []
-
-        scenes = []
-        current_scene = [lines[0]]
-        
-        for line in lines[1:]:
-            time_gap = line.start_time - current_scene[-1].end_time
-            scene_duration = line.end_time - current_scene[0].start_time
-            
-            if (time_gap <= max_gap and scene_duration <= max_duration):
-                current_scene.append(line)
-            else:
-                if len(current_scene) >= min_lines:
-                    scenes.append(current_scene)
-                current_scene = [line]
-        
-        if len(current_scene) >= min_lines:
-            scenes.append(current_scene)
-        
-        return scenes
-
     @classmethod
     def extract_dialogues(cls, subtitle_content: str) -> List[DialogueLine]:
         """Extract dialogues from subtitle content with character identification"""
@@ -156,6 +124,39 @@ class SubtitlesBussiness:
         
         # Convert to 1-5 scale
         return max(1, min(5, round(difficulty)))
+
+    @staticmethod
+    def _group_into_scenes(lines: List[DialogueLine], 
+                            max_gap: float = 5.0,
+                            min_lines: int = 5,
+                            max_duration: float = 180) -> List[List[DialogueLine]]:
+        """
+        Group dialogue lines into scenes based on time gaps and constraints
+        - max_gap: maximum time gap between lines to be considered same scene
+        - min_lines: minimum number of lines for a valid scene
+        - max_duration: maximum duration of a scene in seconds
+        """
+        if not lines:
+            return []
+
+        scenes = []
+        current_scene = [lines[0]]
+        
+        for line in lines[1:]:
+            time_gap = line.start_time - current_scene[-1].end_time
+            scene_duration = line.end_time - current_scene[0].start_time
+            
+            if (time_gap <= max_gap and scene_duration <= max_duration):
+                current_scene.append(line)
+            else:
+                if len(current_scene) >= min_lines:
+                    scenes.append(current_scene)
+                current_scene = [line]
+        
+        if len(current_scene) >= min_lines:
+            scenes.append(current_scene)
+        
+        return scenes
 
     @staticmethod
     def _merge_consecutive_lines(lines: List[DialogueLine]) -> List[DialogueLine]:
