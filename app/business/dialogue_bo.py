@@ -105,7 +105,38 @@ class DialogueBusiness:
 
     @classmethod
     async def list_practice_history(cls, skip: int = 0, limit: int = 20, user: UserOut = None) -> List[DialoguePracticeHistoryOut]:
-        cursor = Mongo.dialogue_practice_history.find({"user_id": user.id }).skip(skip).limit(limit)
+        pipeline = [
+            {"$match": {"user_id": user.id}},
+            {
+                "$addFields": {
+                    "dialogue_id": {"$toObjectId": "$dialogue_id"}
+                }
+            },
+            {
+                "$lookup": {
+                    "from": "dialogues",
+                    "localField": "dialogue_id",
+                    "foreignField": "_id",
+                    "as": "dialogue"
+                }
+            },
+            {
+                "$addFields": {
+                    "dialogue_id": {"$toString": "$dialogue_id"},
+                    "dialogue": {"$arrayElemAt": ["$dialogue", 0]}
+                }
+            },
+            {
+                "$sort": { "completed_at": -1 }
+            },
+            {
+                "$skip": skip
+            },
+            {
+                "$limit": limit
+            }
+        ]
+        cursor = Mongo.dialogue_practice_history.aggregate(pipeline)
         return [DialoguePracticeHistoryOut(**doc) async for doc in cursor]
 
     @staticmethod

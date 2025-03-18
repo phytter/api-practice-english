@@ -40,6 +40,7 @@ class DialoguePracticeHistoryIn(BaseModel):
 
 class DialoguePracticeHistoryOut(DialoguePracticeHistoryIn):
     id: Optional[MongoObjectId] = Field(alias="_id", default=None)
+    dialogue: Optional[DialogueOut] = None 
 
     model_config = ConfigDict(
         populate_by_name=True,
