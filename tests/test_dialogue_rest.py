@@ -303,5 +303,5 @@ async def test_practice_dialogue_suggestions_return(mock_audio_transcript, clien
     assert result_json['pronunciation_score'] == 0.58
     assert result_json['fluency_score'] == 0.2692
     assert result_json['transcribed_text'] == transcribed_text
-    assert len(result_json['suggestions']) == 6
+    assert len(result_json['suggestions']) == 5
     assert len(result_json['word_timings']) == 10

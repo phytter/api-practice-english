@@ -5,7 +5,9 @@ from app.integration.audio_processor import AudioProcessor
 from fastapi import HTTPException, status
 
 class DialogueBusiness:
-    PAUSE_WORD_THRESHOLD = 0.1  # Consider pauses longer than 100ms
+    PAUSE_WORD_THRESHOLD_SECONDS = 0.1
+    PRONUNCIATION_THRESHOLD = 0.8
+    FLUENCY_THRESHOLD = 0.7
 
     @classmethod
     async def search_dialogues(
@@ -47,7 +49,13 @@ class DialogueBusiness:
             )
         
         full_dialogue_text = " ".join(line['text'] for line in dialogue['lines'])
-        transcription_result = await AudioProcessor.client.process_audio_transcript(audio_data)
+        try:
+            transcription_result = await AudioProcessor.client.process_audio_transcript(audio_data)
+        except Exception as e:
+            raise HTTPException(
+                status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+                detail=f"Audio processing error: {str(e)}"
+            )
 
         result = {
             "pronunciation_score": 0.0,
@@ -63,7 +71,6 @@ class DialogueBusiness:
             result["pronunciation_score"] = round(sum(word_scores) / len(word_scores), 4)
         
         result["fluency_score"] = cls._calculate_fluency_score(transcription_result.words)
-
         result["suggestions"] = cls._generate_suggestions(
             result["pronunciation_score"],
             result["fluency_score"],
@@ -73,6 +80,7 @@ class DialogueBusiness:
 
         return result
 
+    @staticmethod
     def _calculate_fluency_score(word_timings: list) -> float:
         # TODO: Implement more sophisticated fluency scoring
         """
@@ -87,7 +95,7 @@ class DialogueBusiness:
 
         for timing in word_timings:
             pause_duration = timing["start_time"] - previous_end
-            if pause_duration > DialogueBusiness.PAUSE_WORD_THRESHOLD:
+            if pause_duration > DialogueBusiness.PAUSE_WORD_THRESHOLD_SECONDS:
                 total_pause_time += pause_duration
             total_speaking_time += (timing["end_time"] - timing["start_time"])
             previous_end = timing["end_time"]
@@ -102,6 +110,7 @@ class DialogueBusiness:
         fluency_score = max(0, min(1, 1 - pause_ratio))
         return round(fluency_score, 4)
 
+    @staticmethod
     def _generate_suggestions(pronunciation_score: float,
                             fluency_score: float,
                             transcribed_text: str,
@@ -111,13 +120,13 @@ class DialogueBusiness:
         """
         suggestions = []
 
-        if pronunciation_score < 0.8:
+        if pronunciation_score < DialogueBusiness.PRONUNCIATION_THRESHOLD:
             suggestions.append({
                 "type": "pronunciation",
                 "message": "Try to speak more clearly and enunciate each word"
             })
 
-        if fluency_score < 0.7:
+        if fluency_score < DialogueBusiness.FLUENCY_THRESHOLD:
             suggestions.append({
                 "type": "fluency",
                 "message": "Try to maintain a more consistent speaking pace with fewer pauses"
@@ -126,8 +135,11 @@ class DialogueBusiness:
         # Simple comparison transcribed_text with expected_text and provide specific suggestions
         transcribed_words = transcribed_text.split()
         expected_words = expected_text.split()
+        max_specific_suggestions = 5
 
         for i, expected_word in enumerate(expected_words):
+            if len(suggestions) >= max_specific_suggestions:
+                break
             if i < len(transcribed_words):
                 transcribed_word = transcribed_words[i]
                 if transcribed_word.lower() != expected_word.lower():
