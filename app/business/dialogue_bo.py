@@ -67,35 +67,29 @@ class DialogueBusiness:
                 detail=f"Audio processing error: {str(e)}"
             )
 
-        result = {
-            "pronunciation_score": 0.0,
-            "fluency_score": 0.0,
-            "transcribed_text": transcription_result.transcribed_text,
-            "word_timings": transcription_result.words,
-            "suggestions": []
-        }
-
         word_scores = [word_score.get('confidence', 0) for word_score in transcription_result.words]
         full_dialogue_text = " ".join(line.text for line in dialogue.lines)
 
-        if word_scores:
-            result["pronunciation_score"] = round(sum(word_scores) / len(word_scores), 4)
-        
-        result["fluency_score"] = cls._calculate_fluency_score(transcription_result.words)
-        result["suggestions"] = cls._generate_suggestions(
-            result["pronunciation_score"],
-            result["fluency_score"],
-            result["transcribed_text"],
+        pronunciation_score = round(sum(word_scores) / len(word_scores), 4) if word_scores else 0.0
+        fluency_score = cls._calculate_fluency_score(transcription_result.words)
+        suggestions = cls._generate_suggestions(
+            pronunciation_score,
+            fluency_score,
+            transcription_result.transcribed_text,
             full_dialogue_text
         )
         xp_earned = cls._calculate_xp(
-            result["pronunciation_score"],
-            result["fluency_score"],
+            pronunciation_score,
+            fluency_score,
             dialogue.difficulty_level
         )
 
         result = PracticeResult(
-            **result,
+            pronunciation_score=pronunciation_score,
+            fluency_score=fluency_score,
+            transcribed_text=transcription_result.transcribed_text,
+            word_timings=transcription_result.words,
+            suggestions=suggestions,
             xp_earned=xp_earned
         )
 
