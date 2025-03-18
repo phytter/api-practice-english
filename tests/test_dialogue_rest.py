@@ -294,6 +294,7 @@ async def test_practice_dialogue_positive_return(mock_audio_transcript, client: 
     assert result_json['pronunciation_score'] == 0.8
     assert result_json['fluency_score'] == 1
     assert result_json['transcribed_text'] == "buzz lightyear mission log"
+    assert result_json['xp_earned'] == 180
     assert len(result_json['suggestions']) == 0
     assert len(result_json['word_timings']) == 4
 
@@ -317,6 +318,7 @@ async def test_practice_dialogue_suggestions_return(mock_audio_transcript, clien
     assert res.status_code == 200
     assert result_json['pronunciation_score'] == 0.58
     assert result_json['fluency_score'] == 0.2692
+    assert result_json['xp_earned'] == 84
     assert result_json['transcribed_text'] == transcribed_text
     assert len(result_json['suggestions']) == 5
     assert len(result_json['word_timings']) == 10

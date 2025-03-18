@@ -86,6 +86,16 @@ class DialogueBusiness:
             result["transcribed_text"],
             full_dialogue_text
         )
+        xp_earned = cls._calculate_xp(
+            result["pronunciation_score"],
+            result["fluency_score"],
+            dialogue["difficulty_level"]
+        )
+
+        result = PracticeResult(
+            **result,
+            xp_earned=xp_earned
+        )
 
         await cls._create_practice_history(dialogue_id, user.id, result)
 
@@ -102,12 +112,12 @@ class DialogueBusiness:
             practice_record = DialoguePracticeHistoryIn(
                 dialogue_id=dialogue_id,
                 user_id=user_id,
-                pronunciation_score=result["pronunciation_score"],
-                fluency_score=result["fluency_score"],
+                pronunciation_score=result.pronunciation_score,
+                fluency_score=result.fluency_score,
                 completed_at=datetime.now(timezone.utc),
                 practice_duration=0,
                 character_played='',
-                xp_earned=0
+                xp_earned=result.xp_earned
             )
             await Mongo.dialogue_practice_history.insert_one(practice_record.model_dump())
         except Exception as e:
@@ -182,3 +192,10 @@ class DialogueBusiness:
                     })
 
         return suggestions
+    
+    @staticmethod
+    def _calculate_xp(pronunciation_score: float, fluency_score: float, difficulty: int) -> int:
+        """Calculate XP earned based on performance and difficulty"""
+        base_xp = difficulty * 100
+        performance_multiplier = (pronunciation_score + fluency_score) / 2
+        return int(base_xp * performance_multiplier)
