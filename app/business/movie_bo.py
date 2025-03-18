@@ -1,9 +1,10 @@
 from typing import List, Dict, Optional
+from datetime import datetime, timezone
 from app.integration.connector import get_subtitle_movie_connector
 from app.model import MovieSearchOut, MovieOut, MovieIn
 from app.business.subtitles_bo import SubtitlesBussiness
 from app.integration import Mongo
-from datetime import datetime, timezone
+from .base import cursor_to_list
 
 class MovieBusiness:
     subtitle_movie = get_subtitle_movie_connector()
@@ -63,5 +64,5 @@ class MovieBusiness:
         query = {}
         if search:
             query["title"] = {"$regex": search, "$options": "i"}
-        movies = Mongo.movies_processed.find(query).skip(skip).limit(limit)
-        return [MovieOut(**movie) async for movie in movies]
+        cursor = Mongo.movies_processed.find(query).skip(skip).limit(limit)
+        return await cursor_to_list(MovieOut, cursor)

@@ -6,6 +6,7 @@ from app.model import DialogueOut, ObjectId, PracticeResult, DialoguePracticeHis
 from app.integration.mongo import Mongo
 from app.integration.audio_processor import AudioProcessor
 from app.business.user_bo import UserBusiness
+from .base import cursor_to_list
 
 logger = logging.getLogger(__name__)
 
@@ -137,7 +138,7 @@ class DialogueBusiness:
             }
         ]
         cursor = Mongo.dialogue_practice_history.aggregate(pipeline)
-        return [DialoguePracticeHistoryOut(**doc) async for doc in cursor]
+        return await cursor_to_list(DialoguePracticeHistoryOut, cursor)
 
     @staticmethod
     async def _create_practice_history(dialogue: DialogueOut, user_id: str, result: PracticeResult) -> None:
