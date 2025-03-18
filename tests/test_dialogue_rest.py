@@ -148,21 +148,21 @@ def mock_google_speech_bad_result(transcript=""):
         ]
     )
   
-async def test_search_dialogues_empty_results(client: AsyncClient):
-
-    res = await client.get(BASE_URL)
+async def test_search_dialogues_empty_results(client: AsyncClient, mock_auth_user_and_header):
+    headers, _ = mock_auth_user_and_header
+    res = await client.get(BASE_URL, headers=headers)
 
     json_data = res.json()
 
     assert res.status_code == 200
     assert len(json_data) == 0
 
-async def test_search_dialogues(client: AsyncClient):
-
+async def test_search_dialogues(client: AsyncClient, mock_auth_user_and_header):
+    headers, _ = mock_auth_user_and_header
     dialogue_db = mock_dialogue()
     await Mongo.dialogues.insert_one(dialogue_db)
 
-    res = await client.get(BASE_URL)
+    res = await client.get(BASE_URL, headers=headers)
 
     json_data = res.json()
 
@@ -170,19 +170,19 @@ async def test_search_dialogues(client: AsyncClient):
     assert len(json_data) == 1
     assert json_data[0]['movie']['title'] == dialogue_db['movie']['title']
 
-async def test_search_dialogues_with_query(client: AsyncClient):
-
+async def test_search_dialogues_with_query(client: AsyncClient, mock_auth_user_and_header):
+    headers, _ = mock_auth_user_and_header
     dialogue_db = mock_dialogue()
     await Mongo.dialogues.insert_one(dialogue_db)
 
-    res = await client.get(f"{BASE_URL}?search=not_included")
+    res = await client.get(f"{BASE_URL}?search=not_included", headers=headers)
 
     json_data = res.json()
 
     assert res.status_code == 200
     assert len(json_data) == 0
 
-    res = await client.get(f"{BASE_URL}?search={dialogue_db['movie']['title']}")
+    res = await client.get(f"{BASE_URL}?search={dialogue_db['movie']['title']}", headers=headers)
 
     json_data = res.json()
 
@@ -190,19 +190,19 @@ async def test_search_dialogues_with_query(client: AsyncClient):
     assert len(json_data) == 1
     assert json_data[0]['movie']['title'] == dialogue_db['movie']['title']
 
-async def test_search_dialogues_with_imdb(client: AsyncClient):
-
+async def test_search_dialogues_with_imdb(client: AsyncClient, mock_auth_user_and_header):
+    headers, _ = mock_auth_user_and_header
     dialogue_db = mock_dialogue()
     await Mongo.dialogues.insert_one(dialogue_db)
 
-    res = await client.get(f"{BASE_URL}?imdb_id=not_included")
+    res = await client.get(f"{BASE_URL}?imdb_id=not_included", headers=headers)
 
     json_data = res.json()
 
     assert res.status_code == 200
     assert len(json_data) == 0
 
-    res = await client.get(f"{BASE_URL}?imdb_id={MOVIE_IMDB_ID}")
+    res = await client.get(f"{BASE_URL}?imdb_id={MOVIE_IMDB_ID}", headers=headers)
 
     json_data = res.json()
 
@@ -210,20 +210,19 @@ async def test_search_dialogues_with_imdb(client: AsyncClient):
     assert len(json_data) == 1
     assert json_data[0]['movie']['imdb_id'] == MOVIE_IMDB_ID
 
-
-async def test_search_dialogues_with_pagination(client: AsyncClient):
-
+async def test_search_dialogues_with_pagination(client: AsyncClient, mock_auth_user_and_header):
+    headers, _ = mock_auth_user_and_header
     await Mongo.dialogues.insert_one(mock_dialogue())
     await Mongo.dialogues.insert_one(mock_dialogue())
 
-    res = await client.get(f"{BASE_URL}?limit=1&skip=0")
+    res = await client.get(f"{BASE_URL}?limit=1&skip=0", headers=headers)
 
     json_data = res.json()
 
     assert res.status_code == 200
     assert len(json_data) == 1
 
-    res = await client.get(f"{BASE_URL}?limit=2&skip=0")
+    res = await client.get(f"{BASE_URL}?limit=2&skip=0", headers=headers)
 
     json_data = res.json()
 
@@ -231,7 +230,7 @@ async def test_search_dialogues_with_pagination(client: AsyncClient):
     assert len(json_data) == 2
 
 
-    res = await client.get(f"{BASE_URL}?limit=2&skip=1")
+    res = await client.get(f"{BASE_URL}?limit=2&skip=1", headers=headers)
 
     json_data = res.json()
 
@@ -239,20 +238,20 @@ async def test_search_dialogues_with_pagination(client: AsyncClient):
     assert len(json_data) == 1
 
 
-    res = await client.get(f"{BASE_URL}?limit=2&skip=2")
+    res = await client.get(f"{BASE_URL}?limit=2&skip=2", headers=headers)
 
     json_data = res.json()
 
     assert res.status_code == 200
     assert len(json_data) == 0
 
-async def test_get_dialogue(client: AsyncClient):
-
+async def test_get_dialogue(client: AsyncClient, mock_auth_user_and_header):
+    headers, _ = mock_auth_user_and_header
     dialogue_db = mock_dialogue()
     result = await Mongo.dialogues.insert_one(dialogue_db)
     dialogue_id = result.inserted_id
 
-    res = await client.get(f"{BASE_URL}/{dialogue_id}")
+    res = await client.get(f"{BASE_URL}/{dialogue_id}", headers=headers)
 
     json_data = res.json()
 
@@ -261,22 +260,24 @@ async def test_get_dialogue(client: AsyncClient):
     assert json_data['_id'] == str(dialogue_id)
 
     non_existent_id = ObjectId()
-    res = await client.get(f"{BASE_URL}/{non_existent_id}")
+    res = await client.get(f"{BASE_URL}/{non_existent_id}", headers=headers)
 
     json_data = res.json()
 
     assert res.status_code == 404
     assert json_data['detail'] == "Dialogue not found"
 
-async def test_practice_dialogue_not_found_error(client: AsyncClient):
+async def test_practice_dialogue_not_found_error(client: AsyncClient, mock_auth_user_and_header):
+    headers, _ = mock_auth_user_and_header
     audio_file = mock_audio()
     non_existent_id = ObjectId()
-    res = await client.post(f"{BASE_URL}/{non_existent_id}/practice", files={"audio": (audio_file.name, audio_file, "audio/webm")})
+    res = await client.post(f"{BASE_URL}/{non_existent_id}/practice", files={"audio": (audio_file.name, audio_file, "audio/webm")}, headers=headers)
 
     assert res.status_code == 404
 
 @patch("google.cloud.speech_v1.SpeechClient.recognize")
-async def test_practice_dialogue_positive_return(mock_audio_transcript, client: AsyncClient):
+async def test_practice_dialogue_positive_return(mock_audio_transcript, client: AsyncClient, mock_auth_user_and_header):
+    headers, _ = mock_auth_user_and_header
     mock_audio_transcript.return_value = mock_google_speech_good_result()
     dialogue_db = mock_dialogue()
     dialogue_db['lines'] = [
@@ -286,7 +287,7 @@ async def test_practice_dialogue_positive_return(mock_audio_transcript, client: 
     dialogue_id = result.inserted_id
 
     audio_file = mock_audio()
-    res = await client.post(f"{BASE_URL}/{dialogue_id}/practice", files={"audio": (audio_file.name, audio_file, "audio/webm")})
+    res = await client.post(f"{BASE_URL}/{dialogue_id}/practice", files={"audio": (audio_file.name, audio_file, "audio/webm")}, headers=headers)
     result_json = res.json()
 
     assert res.status_code == 200
@@ -297,7 +298,8 @@ async def test_practice_dialogue_positive_return(mock_audio_transcript, client: 
     assert len(result_json['word_timings']) == 4
 
 @patch("google.cloud.speech_v1.SpeechClient.recognize")
-async def test_practice_dialogue_suggestions_return(mock_audio_transcript, client: AsyncClient):
+async def test_practice_dialogue_suggestions_return(mock_audio_transcript, client: AsyncClient, mock_auth_user_and_header):
+    headers, _ = mock_auth_user_and_header
     transcribed_text = "bus light mission lag as the location of zurg's fort"
     mock_audio_transcript.return_value = mock_google_speech_bad_result(transcribed_text)
     dialogue_db = mock_dialogue()
@@ -309,7 +311,7 @@ async def test_practice_dialogue_suggestions_return(mock_audio_transcript, clien
     dialogue_id = result.inserted_id
 
     audio_file = mock_audio()
-    res = await client.post(f"{BASE_URL}/{dialogue_id}/practice", files={"audio": (audio_file.name, audio_file, "audio/webm")})
+    res = await client.post(f"{BASE_URL}/{dialogue_id}/practice", files={"audio": (audio_file.name, audio_file, "audio/webm")}, headers=headers)
     result_json = res.json()
 
     assert res.status_code == 200
@@ -320,7 +322,7 @@ async def test_practice_dialogue_suggestions_return(mock_audio_transcript, clien
     assert len(result_json['word_timings']) == 10
 
 async def test_list_practice_history(client: AsyncClient, mock_auth_user_and_header):
-    user_auth, headers = mock_auth_user_and_header
+    headers, user_auth = mock_auth_user_and_header
 
     dialogue_db = mock_dialogue()
     result = await Mongo.dialogues.insert_one(dialogue_db)

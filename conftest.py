@@ -71,4 +71,4 @@ async def mock_user_google_auth(
 async def mock_auth_user_and_header(
     mock_user_google_auth
 ):
-    return mock_user_google_auth['user'], {"Authorization": f"Bearer {mock_user_google_auth['access_token']}"}
+    return {"Authorization": f"Bearer {mock_user_google_auth['access_token']}"}, mock_user_google_auth['user']

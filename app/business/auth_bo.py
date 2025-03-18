@@ -2,7 +2,7 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from google.oauth2 import id_token
 from google.auth.transport import requests
-from fastapi import HTTPException, status, Depends
+from fastapi import HTTPException, status, Depends, Request
 from jose import JWTError, jwt
 from fastapi.security import OAuth2AuthorizationCodeBearer
 
@@ -83,7 +83,21 @@ class AuthBusiness:
 
     @staticmethod
     async def get_current_user(
-        token: str = Depends(oauth2_scheme)
+        request: Request,
+    ) -> UserOut:
+        if request.state.user:
+            return request.state.user
+
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User is not authenticated",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+    @staticmethod
+    async def validate_auth(
+        request: Request,
+        token: str = Depends(oauth2_scheme),
     ) -> UserOut:
 
         credentials_exception = HTTPException(
@@ -104,4 +118,5 @@ class AuthBusiness:
         user = await Mongo.users.find_one({"_id": ObjectId(user_id)})
         if user is None:
             raise credentials_exception
-        return UserOut(**user)
+
+        request.state.user = UserOut(**user)

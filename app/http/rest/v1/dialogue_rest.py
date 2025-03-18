@@ -8,6 +8,7 @@ from app.model import DialogueOut, PracticeResult, DialoguePracticeHistoryOut, U
 dialogue_v1 = APIRouter(
     prefix=f"{settings.API_V1_STR}/dialogues",
     tags=["dialogue"],
+    dependencies=[Depends(AuthBusiness.validate_auth)]
 )
 
 @dialogue_v1.get(
