@@ -1,8 +1,8 @@
 from app.core.config import settings
-from fastapi import APIRouter, File, Form, UploadFile
-from app.business import DialogueBusiness
+from fastapi import APIRouter, File, Form, UploadFile, Depends
+from app.business import DialogueBusiness, AuthBusiness
 from typing import List, Optional
-from app.model import DialogueOut
+from app.model import DialogueOut, PracticeResult, DialoguePracticeHistoryOut, UserOut
 
 
 dialogue_v1 = APIRouter(
@@ -36,6 +36,7 @@ async def show_dialogue(
 @dialogue_v1.post(
     "/{dialogue_id}/practice",
     status_code=200,
+    response_model=PracticeResult
 )
 async def practice_dialogue(
     dialogue_id: str,
@@ -43,3 +44,15 @@ async def practice_dialogue(
 ) -> None:
     audio_data = await audio.read()
     return await DialogueBusiness.proccess_practice_dialogue(dialogue_id, audio_data)
+
+@dialogue_v1.get(
+    "/practice/history",
+    response_model=List[DialoguePracticeHistoryOut],
+    status_code=200,
+)
+async def list_practice_history(
+    skip: int = 0,
+    limit: int = 20,
+    user: UserOut = Depends(AuthBusiness.get_current_user)
+) -> List[DialoguePracticeHistoryOut]:
+    return await DialogueBusiness.list_practice_history(skip, limit, user)

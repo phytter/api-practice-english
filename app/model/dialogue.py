@@ -14,13 +14,13 @@ class DialogueMovie(BaseModel):
     title: str
     language: str = "en"
 
-class Dialogue(BaseModel):
+class DialogueIn(BaseModel):
     movie: Optional[DialogueMovie] = None
     difficulty_level: int
     duration_seconds: float 
     lines: List[DialogueLine]
 
-class DialogueOut(Dialogue):
+class DialogueOut(DialogueIn):
     id: Optional[MongoObjectId] = Field(alias="_id", default=None)
 
     model_config = ConfigDict(
@@ -28,8 +28,7 @@ class DialogueOut(Dialogue):
         arbitrary_types_allowed=True,
     )
 
-class DialogueProgress(BaseModel):
-    id: Optional[MongoObjectId] = Field(alias="_id", default=None)
+class DialoguePracticeHistoryIn(BaseModel):
     dialogue_id: str
     user_id: str
     pronunciation_score: float
@@ -38,36 +37,19 @@ class DialogueProgress(BaseModel):
     practice_duration_seconds: float
     character_played: Optional[str] = ''
     xp_earned: Optional[int] = 0
-    model_config = ConfigDict(
-        populate_by_name=True,
-        arbitrary_types_allowed=True,
-    )
 
-class DialogueProgressOut(BaseModel):
+class DialoguePracticeHistoryOut(DialoguePracticeHistoryIn):
     id: Optional[MongoObjectId] = Field(alias="_id", default=None)
-    dialogue_id: str
-    user_id: str
-    dialogue: Optional[Dialogue] = None
-    pronunciation_score: float
-    fluency_score: float
-    completed_at: datetime
-    practice_duration_seconds: float
-    character_played: Optional[str] = ''
-    xp_earned: Optional[int] = 0
+
     model_config = ConfigDict(
         populate_by_name=True,
         arbitrary_types_allowed=True,
     )
-
-class DialoguePractice(BaseModel):
-    dialogue_id: str
-    character: str
-    audio_chunk: bytes
-    line_index: int
 
 class PracticeResult(BaseModel):
     pronunciation_score: float
     fluency_score: float
     transcribed_text: str
     suggestions: List[dict]
-    xp_earned: int
+    word_timings: List[dict]
+    xp_earned: int = 0

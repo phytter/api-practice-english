@@ -2,14 +2,20 @@ from datetime import datetime, timedelta, timezone
 from typing import Optional
 from google.oauth2 import id_token
 from google.auth.transport import requests
-from fastapi import HTTPException, status
-from jose import jwt
+from fastapi import HTTPException, status, Depends
+from jose import JWTError, jwt
+from fastapi.security import OAuth2AuthorizationCodeBearer
 
-from app.model import UserIn, UserOut, GoogleLoginData
+from app.model import UserIn, UserOut, GoogleLoginData, ObjectId
 from app.core.config import settings
 from .base import Mongo
 
 class AuthBusiness:
+
+    oauth2_scheme = OAuth2AuthorizationCodeBearer(
+        authorizationUrl="https://accounts.google.com/o/oauth2/v2/auth",
+        tokenUrl="https://oauth2.googleapis.com/token"
+    )
 
     @classmethod
     async def google_login_service(cls, token_data: GoogleLoginData):
@@ -74,3 +80,28 @@ class AuthBusiness:
             to_encode, settings.SECRET_KEY, algorithm=settings.ALGORITHM
         )
         return encoded_jwt
+
+    @staticmethod
+    async def get_current_user(
+        token: str = Depends(oauth2_scheme)
+    ) -> UserOut:
+
+        credentials_exception = HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Could not validate credentials",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+
+        try:
+            payload = jwt.decode(token, settings.SECRET_KEY, algorithms=[settings.ALGORITHM])
+
+            user_id: str | None = payload.get("sub")
+            if user_id is None:
+                raise credentials_exception
+        except JWTError:
+            raise credentials_exception     
+
+        user = await Mongo.users.find_one({"_id": ObjectId(user_id)})
+        if user is None:
+            raise credentials_exception
+        return UserOut(**user)

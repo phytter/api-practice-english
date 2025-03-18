@@ -39,6 +39,7 @@ class Mongo:
         cls.users = cls.db["users"]
         cls.movies_processed = cls.db["movies_processed"]
         cls.dialogues = cls.db["dialogues"]
+        cls.dialogue_practice_history = cls.db["dialogue_practice_history"]
 
     @classmethod
     def _shutdown(cls) -> None:

@@ -1,8 +1,12 @@
 from typing import List
-from app.model import DialogueOut, ObjectId
+from datetime import datetime, timezone
+import logging
+from fastapi import HTTPException, status
+from app.model import DialogueOut, ObjectId, PracticeResult, DialoguePracticeHistoryIn, DialoguePracticeHistoryOut, UserOut
 from app.integration.mongo import Mongo
 from app.integration.audio_processor import AudioProcessor
-from fastapi import HTTPException, status
+
+logger = logging.getLogger(__name__)
 
 class DialogueBusiness:
     PAUSE_WORD_THRESHOLD_SECONDS = 0.1
@@ -39,7 +43,11 @@ class DialogueBusiness:
         return DialogueOut(**dialogue)
     
     @classmethod
-    async def proccess_practice_dialogue(cls, dialogue_id: str, audio_data: bytes) -> None:
+    async def proccess_practice_dialogue(
+        cls,
+        dialogue_id: str,
+        audio_data: bytes
+    ) -> PracticeResult:
         dialogue = await Mongo.dialogues.find_one({"_id": ObjectId(dialogue_id)})
 
         if not dialogue:
@@ -78,7 +86,31 @@ class DialogueBusiness:
             full_dialogue_text
         )
 
+        await cls._save_practice_history(dialogue_id, 'user.id', result)
+
         return result
+    
+    @classmethod
+    async def list_practice_history(cls, skip: int = 0, limit: int = 20, user: UserOut = None) -> List[DialoguePracticeHistoryOut]:
+        cursor = Mongo.dialogue_practice_history.find({"user_id": user.id }).skip(skip).limit(limit)
+        return [DialoguePracticeHistoryOut(**doc) async for doc in cursor]
+
+    @staticmethod
+    async def _save_practice_history(dialogue_id: str, user_id: str, result: PracticeResult) -> None:
+        try:
+            practice_record = DialoguePracticeHistoryIn(
+                dialogue_id=dialogue_id,
+                user_id=user_id,
+                pronunciation_score=result["pronunciation_score"],
+                fluency_score=result["fluency_score"],
+                completed_at=datetime.now(timezone.utc),
+                practice_duration=0,
+                character_played='',
+                xp_earned=0
+            )
+            await Mongo.dialogue_practice_history.insert_one(practice_record.model_dump())
+        except Exception as e:
+            logger.error(f"Error saving practice history: {str(e)}")
 
     @staticmethod
     def _calculate_fluency_score(word_timings: list) -> float:
