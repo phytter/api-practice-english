@@ -12,7 +12,7 @@ from .base import Mongo
 class AuthBusiness:
 
     @classmethod
-    async def google_login_service(self, token_data: GoogleLoginData):
+    async def google_login_service(cls, token_data: GoogleLoginData):
         token = token_data.token
         try:
             idinfo = id_token.verify_oauth2_token(
@@ -48,7 +48,7 @@ class AuthBusiness:
             user = UserOut(**user)
 
             # Create access token
-            access_token = self.create_access_token(data={"sub": str(user.id)})
+            access_token = cls.create_access_token(data={"sub": str(user.id)})
             
             return {
                 "access_token": access_token,

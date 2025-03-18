@@ -5,12 +5,12 @@ from app.model import Dialogue, DialogueLine
 class SubtitlesBussiness:
 
     @classmethod
-    def process_subtitle_content(self, content: str) -> List[Dialogue]:
+    def process_subtitle_content(cls, content: str) -> List[Dialogue]:
         """Process subtitle content into structured dialogues"""
 
-        dialogue_lines = self.extract_dialogues(content)
-        difficulty_level = self.calculate_difficulty(dialogue_lines)
-        scenes = self._group_into_scenes(dialogue_lines)
+        dialogue_lines = cls.extract_dialogues(content)
+        difficulty_level = cls.calculate_difficulty(dialogue_lines)
+        scenes = cls._group_into_scenes(dialogue_lines)
 
         return [Dialogue(
             lines = [dict(line) for line in scene],
@@ -52,7 +52,7 @@ class SubtitlesBussiness:
         return scenes
 
     @classmethod
-    def extract_dialogues(self, subtitle_content: str) -> List[DialogueLine]:
+    def extract_dialogues(cls, subtitle_content: str) -> List[DialogueLine]:
         """Extract dialogues from subtitle content with character identification"""
         dialogue_lines = []
         min_length_to_be_valid_block = 3
@@ -65,11 +65,11 @@ class SubtitlesBussiness:
                 continue
                 
             timestamp = lines[1]
-            start_time, end_time = self._parse_timestamp(timestamp)
+            start_time, end_time = cls._parse_timestamp(timestamp)
             
             # Parse text and identify character
             text = '\n'.join(lines[2:])
-            dialogues = self._identify_all_characters(text)
+            dialogues = cls._identify_all_characters(text)
             
             for character, dialogue in dialogues:
                 if dialogue:
@@ -82,8 +82,104 @@ class SubtitlesBussiness:
                         )
                     )
         
-        return self._merge_consecutive_lines(dialogue_lines)
+        return cls._merge_consecutive_lines(dialogue_lines)
 
+    @classmethod
+    def _clear_text_dialogue(cls, text: str) -> str:
+        return cls._remove_dots(cls._remove_html_tags(text))
+
+    @classmethod
+    def _identify_all_characters(cls, text: str) -> List[Tuple[str, str]]:
+        dialogues = []
+        lines = text.splitlines()
+        
+        for line in lines:
+            character, dialogue = cls._identify_character(line)
+            
+            if character and dialogue:
+                dialogues.append((character, dialogue))
+            elif dialogues and character == "":
+                last_character, last_dialogue = dialogues[-1]
+                dialogues.append((last_character, dialogue))
+            else:
+                dialogues.append(("", dialogue))
+        return dialogues
+
+    @classmethod
+    def _identify_character(cls, text: str) -> Tuple[str, str]:
+        """
+        Identify character name and dialogue from text
+        Returns tuple of (character_name, dialogue_text)
+        """
+        # Common patterns for character identification
+        patterns = [
+            r'^([A-Z][A-Z\s]+):\s*(.*)',  # JOHN: Hello there
+            r'^([A-Z][a-z]+):\s*(.*)',    # John: Hello there
+            r'\[([^\]]+)\]\s*(.*)',       # [JOHN] Hello there
+            r'\(([^\)]+)\)\s*(.*)',       # (JOHN) Hello there
+        ]
+        
+        for pattern in patterns:
+            match = re.match(pattern, text.strip())
+            if match:
+                character = match.group(1).strip()
+                dialogue = match.group(2).strip()
+                return character, cls._clear_text_dialogue(dialogue)
+        
+        return "", cls._clear_text_dialogue(text.strip())
+
+    @classmethod
+    def calculate_difficulty(cls, dialogue_lines: List[DialogueLine]) -> int:
+        """
+        Calculate difficulty level (1-5) based on:
+        - Vocabulary complexity
+        - Dialogue speed
+        - Number of characters
+        - Length of dialogues
+        """
+
+        if not dialogue_lines:
+            return 1
+            
+        avg_words_per_second = cls._calculate_speech_rate(dialogue_lines)
+        vocab_complexity = cls._calculate_vocab_complexity(dialogue_lines)
+        num_characters = len(set(line.character for line in dialogue_lines)) or 2
+        avg_line_length = sum(len(line.text.split()) for line in dialogue_lines) / len(dialogue_lines)
+        
+        # Weight and combine factors
+        difficulty = (
+            (avg_words_per_second * 4) +  # Speed is important
+            (vocab_complexity * 3) +      # Vocabulary complexity is important
+            (num_characters * 0.5) +      # More characters = slightly harder
+            (avg_line_length * 0.6)       # Longer lines = slightly harder
+        ) / 5  # Normalize
+        
+        # Convert to 1-5 scale
+        return max(1, min(5, round(difficulty)))
+
+    @staticmethod
+    def _merge_consecutive_lines(lines: List[DialogueLine]) -> List[DialogueLine]:
+        """Merge consecutive lines from the same character"""
+        if not lines:
+            return lines
+            
+        merged_lines = []
+        current_line = lines[0]
+        
+        for next_line in lines[1:]:
+            # If same character and small time gap (less than 2 seconds)
+            if (current_line.character and current_line.character == next_line.character and
+                next_line.start_time - current_line.end_time < 2.0):
+                current_line.text += " " + next_line.text
+                current_line.end_time = next_line.end_time
+            else:
+                merged_lines.append(current_line)
+                current_line = next_line
+        
+        merged_lines.append(current_line)
+        return merged_lines
+
+    @staticmethod
     def _parse_timestamp(timestamp: str) -> Tuple[float, float]:
         """Convert SRT timestamp to seconds"""
         pattern = r'(\d{2}):(\d{2}):(\d{2}),(\d{3}) --> (\d{2}):(\d{2}):(\d{2}),(\d{3})'
@@ -108,109 +204,18 @@ class SubtitlesBussiness:
         
         return start_time, end_time
 
+    @staticmethod
     def _remove_html_tags(text: str) -> str:
         """Remove HTML tags from the given text."""
         clean = re.compile('<.*?>')
         return re.sub(clean, '', text)
 
+    @staticmethod
     def _remove_dots(text: str) -> str:
         """Remove all dots from the given text."""
         return text.replace('.', '').replace('-', '')
-    
-    @classmethod
-    def _clear_text_dialogue (self, text: str) -> str:
-        return self._remove_dots(self._remove_html_tags(text))
 
-    @classmethod
-    def _identify_all_characters(self, text: str) -> List[Tuple[str, str]]:
-        dialogues = []
-        lines = text.splitlines()
-        
-        for line in lines:
-            character, dialogue = self._identify_character(line)
-            
-            if character and dialogue:
-                dialogues.append((character, dialogue))
-            elif dialogues and character == "":
-                last_character, last_dialogue = dialogues[-1]
-                dialogues.append((last_character, dialogue))
-            else:
-                dialogues.append(("", dialogue))
-        return dialogues
-
-    @classmethod
-    def _identify_character(self, text: str) -> Tuple[str, str]:
-        """
-        Identify character name and dialogue from text
-        Returns tuple of (character_name, dialogue_text)
-        """
-        # Common patterns for character identification
-        patterns = [
-            r'^([A-Z][A-Z\s]+):\s*(.*)',  # JOHN: Hello there
-            r'^([A-Z][a-z]+):\s*(.*)',    # John: Hello there
-            r'\[([^\]]+)\]\s*(.*)',       # [JOHN] Hello there
-            r'\(([^\)]+)\)\s*(.*)',       # (JOHN) Hello there
-        ]
-        
-        for pattern in patterns:
-            match = re.match(pattern, text.strip())
-            if match:
-                character = match.group(1).strip()
-                dialogue = match.group(2).strip()
-                return character, self._clear_text_dialogue(dialogue)
-        
-        return "", self._clear_text_dialogue(text.strip())
-
-    def _merge_consecutive_lines(lines: List[DialogueLine]) -> List[DialogueLine]:
-        """Merge consecutive lines from the same character"""
-        if not lines:
-            return lines
-            
-        merged_lines = []
-        current_line = lines[0]
-        
-        for next_line in lines[1:]:
-            # If same character and small time gap (less than 2 seconds)
-            if (current_line.character and current_line.character == next_line.character and
-                next_line.start_time - current_line.end_time < 2.0):
-                current_line.text += " " + next_line.text
-                current_line.end_time = next_line.end_time
-            else:
-                merged_lines.append(current_line)
-                current_line = next_line
-        
-        merged_lines.append(current_line)
-        return merged_lines
-
-    @classmethod
-    def calculate_difficulty(self, dialogue_lines: List[DialogueLine]) -> int:
-        """
-        Calculate difficulty level (1-5) based on:
-        - Vocabulary complexity
-        - Dialogue speed
-        - Number of characters
-        - Length of dialogues
-        """
-
-        if not dialogue_lines:
-            return 1
-            
-        avg_words_per_second = self._calculate_speech_rate(dialogue_lines)
-        vocab_complexity = self._calculate_vocab_complexity(dialogue_lines)
-        num_characters = len(set(line.character for line in dialogue_lines)) or 2
-        avg_line_length = sum(len(line.text.split()) for line in dialogue_lines) / len(dialogue_lines)
-        
-        # Weight and combine factors
-        difficulty = (
-            (avg_words_per_second * 4) +  # Speed is important
-            (vocab_complexity * 3) +      # Vocabulary complexity is important
-            (num_characters * 0.5) +      # More characters = slightly harder
-            (avg_line_length * 0.6)       # Longer lines = slightly harder
-        ) / 5  # Normalize
-        
-        # Convert to 1-5 scale
-        return max(1, min(5, round(difficulty)))
-
+    @staticmethod
     def _calculate_speech_rate(lines: List[DialogueLine]) -> float:
         """Calculate average words per second"""
         total_words = 0
@@ -224,6 +229,7 @@ class SubtitlesBussiness:
         
         return total_words / total_duration if total_duration > 0 else 0
 
+    @staticmethod
     def _calculate_vocab_complexity(lines: List[DialogueLine]) -> float:
         """
         Calculate vocabulary complexity (0-1)
