@@ -3,7 +3,7 @@ from app.integration.connector import get_subtitle_movie_connector
 from app.model import MovieSearchOut, MovieOut, MovieIn
 from app.business.subtitles_bo import SubtitlesBussiness
 from app.integration import Mongo
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 
 class MovieBusiness:
     subtitle_movie = get_subtitle_movie_connector()

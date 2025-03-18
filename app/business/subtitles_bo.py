@@ -113,7 +113,6 @@ class SubtitlesBussiness:
         clean = re.compile('<.*?>')
         return re.sub(clean, '', text)
 
-
     def _remove_dots(text: str) -> str:
         """Remove all dots from the given text."""
         return text.replace('.', '').replace('-', '')
@@ -174,7 +173,6 @@ class SubtitlesBussiness:
             # If same character and small time gap (less than 2 seconds)
             if (current_line.character and current_line.character == next_line.character and
                 next_line.start_time - current_line.end_time < 2.0):
-                # Merge lines
                 current_line.text += " " + next_line.text
                 current_line.end_time = next_line.end_time
             else:

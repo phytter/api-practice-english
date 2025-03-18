@@ -64,7 +64,6 @@ class OpenSubTitles(SubtitleMovies):
             subtitle = max(data["data"], key=lambda x: x.get("ratings", 0))
             file_id = subtitle["attributes"]["files"][0]["file_id"]
 
-            # Download the subtitle file
             async with HttpClient.session.post(
                 f"{cls.base_url}/download",
                 headers=cls.default_headers,
@@ -76,7 +75,6 @@ class OpenSubTitles(SubtitleMovies):
                 download_data = await download_response.json()
                 subtitle_url = download_data["link"]
                 
-                # Get the actual subtitle content
                 async with HttpClient.session.get(subtitle_url) as content_response:
                     subtitle_content = await content_response.text()
                     

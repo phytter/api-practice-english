@@ -19,7 +19,6 @@ class GoogleAudioProcessor(AudioProcessor):
 
         audio = speech_v1.RecognitionAudio(content=audio_data)
 
-
         if cls._get_audio_duration(audio_data) > cls.min_time_seconds_to_long_running:
             operation = cls.speech_client.long_running_recognize(config=cls.config, audio=audio)
             response = operation.result(timeout=90)
