@@ -109,7 +109,8 @@ def mock_movie_processed_db():
       },
     }
 
-async def test_search_movies_open_subtitles(client: AsyncClient, responses):
+async def test_search_movies_open_subtitles(client: AsyncClient, responses, mock_auth_user_and_header):
+    headers, _ = mock_auth_user_and_header
     mockedOpenSubtitlesMovie = mock_open_subtitles_movie()
     responses.get(
       re.compile(r".*/features"),
@@ -119,7 +120,8 @@ async def test_search_movies_open_subtitles(client: AsyncClient, responses):
     )
     res = await client.get(
         f"{BASE_URL}/search", 
-        params={"query": "Matrix"}
+        params={"query": "Matrix"},
+        headers=headers
     )
 
     json = res.json()
@@ -130,8 +132,8 @@ async def test_search_movies_open_subtitles(client: AsyncClient, responses):
     assert json[0].get("imdb_id") == mockedOpenSubtitlesMovie['attributes']['imdb_id']
 
 
-async def test_process_movie_sub_empty_content(client: AsyncClient, responses):
-    
+async def test_process_movie_sub_empty_content(client: AsyncClient, responses, mock_auth_user_and_header):
+    headers, _ = mock_auth_user_and_header
     responses.get(
         re.compile(r".*/subtitles"),
         payload={
@@ -147,15 +149,15 @@ async def test_process_movie_sub_empty_content(client: AsyncClient, responses):
         body=""
     )
 
-    res = await client.post(f"{BASE_URL}/{MOVIE_IMDB_ID}/process")
+    res = await client.post(f"{BASE_URL}/{MOVIE_IMDB_ID}/process", headers=headers)
 
     json = res.json()
 
     assert res.status_code == 200
     assert json.get('dialogues_count') == 0
 
-async def test_process_movie_with_no_cache(client: AsyncClient, responses):
-
+async def test_process_movie_with_no_cache(client: AsyncClient, responses, mock_auth_user_and_header):
+    headers, _ = mock_auth_user_and_header
     responses.get(
         re.compile(r".*/subtitles"),
         payload={
@@ -171,15 +173,15 @@ async def test_process_movie_with_no_cache(client: AsyncClient, responses):
         body=mock_get_subtitle_content()
     )
 
-    res = await client.post(f"{BASE_URL}/{MOVIE_IMDB_ID}/process")
+    res = await client.post(f"{BASE_URL}/{MOVIE_IMDB_ID}/process", headers=headers)
 
     json = res.json()
 
     assert res.status_code == 200
     assert json.get('dialogues_count') == 1
 
-async def test_process_movie_with_cache(client: AsyncClient, responses):
-
+async def test_process_movie_with_cache(client: AsyncClient, responses, mock_auth_user_and_header):
+    headers, _ = mock_auth_user_and_header
     movie_processed_db = mock_movie_processed_db()
     movie_processed_db['content'] = ""
     await Mongo.movies_processed.insert_one(movie_processed_db)
@@ -199,19 +201,19 @@ async def test_process_movie_with_cache(client: AsyncClient, responses):
         body=mock_get_subtitle_content()
     )
 
-    res = await client.post(f"{BASE_URL}/{MOVIE_IMDB_ID}/process")
+    res = await client.post(f"{BASE_URL}/{MOVIE_IMDB_ID}/process", headers=headers)
 
     json = res.json()
 
     assert res.status_code == 200
     assert json.get('dialogues_count') == 0
 
-async def test_list_processed_movie(client: AsyncClient):
-
+async def test_list_processed_movie(client: AsyncClient, mock_auth_user_and_header):
+    headers, _ = mock_auth_user_and_header
     movie_processed_db = mock_movie_processed_db()
     await Mongo.movies_processed.insert_one(movie_processed_db)
 
-    res = await client.get(f"{BASE_URL}/processed")
+    res = await client.get(f"{BASE_URL}/processed", headers=headers)
 
     json_data = res.json()
 
@@ -219,38 +221,38 @@ async def test_list_processed_movie(client: AsyncClient):
     assert len(json_data) == 1
     assert json_data[0]['title'] == movie_processed_db['title']
 
-async def test_search_processed_movie(client: AsyncClient):
-
+async def test_search_processed_movie(client: AsyncClient, mock_auth_user_and_header):
+    headers, _ = mock_auth_user_and_header
     movie_processed_db = mock_movie_processed_db()
     await Mongo.movies_processed.insert_one(movie_processed_db)
 
-    res = await client.get(f"{BASE_URL}/processed?search={movie_processed_db['title']}")
+    res = await client.get(f"{BASE_URL}/processed?search={movie_processed_db['title']}", headers=headers)
 
     json_data = res.json()
 
     assert res.status_code == 200
     assert len(json_data) == 1
 
-    res = await client.get(f"{BASE_URL}/processed?search=not_included")
+    res = await client.get(f"{BASE_URL}/processed?search=not_included", headers=headers)
 
     json_data = res.json()
 
     assert res.status_code == 200
     assert len(json_data) == 0
 
-async def test_search_processed_movie_with_pagination(client: AsyncClient):
-
+async def test_search_processed_movie_with_pagination(client: AsyncClient, mock_auth_user_and_header):
+    headers, _ = mock_auth_user_and_header
     await Mongo.movies_processed.insert_one(mock_movie_processed_db())
     await Mongo.movies_processed.insert_one(mock_movie_processed_db())
 
-    res = await client.get(f"{BASE_URL}/processed?limit=1&skip=0")
+    res = await client.get(f"{BASE_URL}/processed?limit=1&skip=0", headers=headers)
 
     json_data = res.json()
 
     assert res.status_code == 200
     assert len(json_data) == 1
 
-    res = await client.get(f"{BASE_URL}/processed?limit=2&skip=0")
+    res = await client.get(f"{BASE_URL}/processed?limit=2&skip=0", headers=headers)
 
     json_data = res.json()
 
@@ -258,7 +260,7 @@ async def test_search_processed_movie_with_pagination(client: AsyncClient):
     assert len(json_data) == 2
 
 
-    res = await client.get(f"{BASE_URL}/processed?limit=2&skip=1")
+    res = await client.get(f"{BASE_URL}/processed?limit=2&skip=1", headers=headers)
 
     json_data = res.json()
 
@@ -266,7 +268,7 @@ async def test_search_processed_movie_with_pagination(client: AsyncClient):
     assert len(json_data) == 1
 
 
-    res = await client.get(f"{BASE_URL}/processed?limit=2&skip=2")
+    res = await client.get(f"{BASE_URL}/processed?limit=2&skip=2", headers=headers)
 
     json_data = res.json()
 

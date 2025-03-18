@@ -7,7 +7,6 @@ health_v1 = APIRouter(
     tags=["health"],
 )
 
-
 @health_v1.get("", response_description="Application health")
 async def health_check():
 
