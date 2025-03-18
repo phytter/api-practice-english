@@ -5,6 +5,7 @@ from fastapi import HTTPException, status
 from app.model import DialogueOut, ObjectId, PracticeResult, DialoguePracticeHistoryIn, DialoguePracticeHistoryOut, UserOut
 from app.integration.mongo import Mongo
 from app.integration.audio_processor import AudioProcessor
+from app.business.user_bo import UserBusiness
 
 logger = logging.getLogger(__name__)
 
@@ -98,6 +99,7 @@ class DialogueBusiness:
         )
 
         await cls._create_practice_history(dialogue, user.id, result)
+        await UserBusiness.update_progress(user.id, result)
 
         return result
 

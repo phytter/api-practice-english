@@ -1,6 +1,6 @@
 from .auth import GoogleLoginData
 from .base import PyObjectId, ObjectId 
-from .user import UserIn, UserOut, UserUpdate
+from .user import UserIn, UserOut, UserUpdate, Achievement
 from .movie import MovieSearchOut, MovieIn, MovieOut
 from .dialogue import (
     DialogueIn,
@@ -27,4 +27,5 @@ __all__ = (
     "PracticeResult",
     "DialoguePracticeHistoryIn",
     "DialoguePracticeHistoryOut",
+    "Achievement",
 )
