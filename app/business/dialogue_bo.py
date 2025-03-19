@@ -99,7 +99,7 @@ class DialogueBusiness:
         return result
 
     @classmethod
-    async def list_practice_history(cls, skip: int = 0, limit: int = 20, user: UserOut = None) -> List[DialoguePracticeHistoryOut]:
+    async def list_practice_history(cls, filter_type: str, skip: int = 0, limit: int = 20, user: UserOut = None) -> List[DialoguePracticeHistoryOut]:
         pipeline = [
             {"$match": {"user_id": user.id}},
             {
@@ -122,7 +122,7 @@ class DialogueBusiness:
                 }
             },
             {
-                "$sort": { "completed_at": -1 }
+                "$sort": { "completed_at": -1 } if filter_type == 'recent' else { "xp_earned": -1 }
             },
             {
                 "$skip": skip

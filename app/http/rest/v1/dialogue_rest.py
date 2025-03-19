@@ -53,8 +53,9 @@ async def practice_dialogue(
     status_code=200,
 )
 async def list_practice_history(
+    filter_type: str = 'recent',
     skip: int = 0,
     limit: int = 20,
     user: UserOut = Depends(AuthBusiness.get_current_user)
 ) -> List[DialoguePracticeHistoryOut]:
-    return await DialogueBusiness.list_practice_history(skip, limit, user)
+    return await DialogueBusiness.list_practice_history(filter_type, skip, limit, user)
