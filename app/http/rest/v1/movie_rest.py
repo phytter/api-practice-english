@@ -17,9 +17,9 @@ movie_v1 = APIRouter(
     status_code=200,
 )
 async def search_movies(
-    query: str,
+    search: str,
 ) -> List[MovieSearchOut]:
-    return await MovieBusiness.search_movies(query)
+    return await MovieBusiness.search_movies(search)
 
 @movie_v1.post(
     "/{imdb_id}/process",

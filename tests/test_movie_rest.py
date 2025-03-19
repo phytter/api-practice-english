@@ -120,7 +120,7 @@ async def test_search_movies_open_subtitles(client: AsyncClient, responses, mock
     )
     res = await client.get(
         f"{BASE_URL}/search", 
-        params={"query": "Matrix"},
+        params={"search": "Matrix"},
         headers=headers
     )
 
