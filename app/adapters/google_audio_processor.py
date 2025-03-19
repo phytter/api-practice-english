@@ -26,7 +26,11 @@ class GoogleAudioProcessor(AudioProcessor):
             response = cls.speech_client.recognize(config=cls.config, audio=audio)
 
         if not response.results:
-            return ''
+            return AudioTranscriptResult(
+                transcribed_text = '',
+                confidence = 0,
+                words = []
+            )
 
         transcription = response.results[0].alternatives[0]
         return AudioTranscriptResult(
