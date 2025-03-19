@@ -144,7 +144,7 @@ class DialogueBusiness:
                 pronunciation_score=result.pronunciation_score,
                 fluency_score=result.fluency_score,
                 completed_at=datetime.now(timezone.utc),
-                practice_duration=practice_duration,
+                practice_duration_seconds=practice_duration,
                 character_played='',
                 xp_earned=result.xp_earned
             )
