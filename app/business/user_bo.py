@@ -7,13 +7,12 @@ class UserBusiness:
 
     @classmethod
     async def get_user(cls, user_id: str) -> UserOut:
-        user = await Mongo.users.find_one({"_id": ObjectId(user_id)})
-        if user is None:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="User not found"
-            )
-        return UserOut(**user)
+        if (user := await Mongo.users.find_one({"_id": ObjectId(user_id)})) is not None:
+            return UserOut(**user)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="User not found"
+        )
 
     @classmethod
     async def update_progress(

@@ -32,17 +32,16 @@ class DialogueBusiness:
         if imdb_id:
             query["movie.imdb_id"] = imdb_id
         cursor = Mongo.dialogues.find(query).skip(skip).limit(limit)
-        return [DialogueOut(**doc) async for doc in cursor]
+        return await cursor_to_list(DialogueOut, cursor)
     
     @classmethod
     async def get_dialogue (cls, dialogue_id: str) -> DialogueOut:
-        dialogue = await Mongo.dialogues.find_one({"_id": ObjectId(dialogue_id)})
-        if not dialogue:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Dialogue not found"
-            )
-        return DialogueOut(**dialogue)
+        if (dialogue :=  await Mongo.dialogues.find_one({"_id": ObjectId(dialogue_id)})) is not None:
+            return DialogueOut(**dialogue)
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Dialogue not found"
+        )
     
     @classmethod
     async def proccess_practice_dialogue(
@@ -52,12 +51,6 @@ class DialogueBusiness:
         user: UserOut = None
     ) -> PracticeResult:
         dialogue = await cls.get_dialogue(dialogue_id)
-
-        if not dialogue:
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="Dialogue not found"
-            )
 
         try:
             transcription_result = await AudioProcessor.client.process_audio_transcript(audio_data)

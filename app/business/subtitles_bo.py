@@ -8,8 +8,8 @@ class SubtitlesBussiness:
     def process_subtitle_content(cls, content: str) -> List[DialogueIn]:
         """Process subtitle content into structured dialogues"""
 
-        dialogue_lines = cls.extract_dialogues(content)
-        difficulty_level = cls.calculate_difficulty(dialogue_lines)
+        dialogue_lines = cls._extract_dialogues(content)
+        difficulty_level = cls._calculate_difficulty(dialogue_lines)
         scenes = cls._group_into_scenes(dialogue_lines)
 
         return [DialogueIn(
@@ -20,7 +20,7 @@ class SubtitlesBussiness:
         ) for scene in scenes]
 
     @classmethod
-    def extract_dialogues(cls, subtitle_content: str) -> List[DialogueLine]:
+    def _extract_dialogues(cls, subtitle_content: str) -> List[DialogueLine]:
         """Extract dialogues from subtitle content with character identification"""
         dialogue_lines = []
         min_length_to_be_valid_block = 3
@@ -97,7 +97,7 @@ class SubtitlesBussiness:
         return "", cls._clear_text_dialogue(text.strip())
 
     @classmethod
-    def calculate_difficulty(cls, dialogue_lines: List[DialogueLine]) -> int:
+    def _calculate_difficulty(cls, dialogue_lines: List[DialogueLine]) -> int:
         """
         Calculate difficulty level (1-5) based on:
         - Vocabulary complexity

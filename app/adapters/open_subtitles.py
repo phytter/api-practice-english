@@ -24,21 +24,21 @@ class OpenSubTitles(SubtitleMovies):
                 "type": "movie"
             }
         ) as response:
-            if response.status == 200:
-                data = await response.json()
-                return [
-                    MovieSearchOut(
-                        title=item.get("attributes", {}).get("title"),
-                        year=int(item.get("attributes", {}).get("year") or 0),
-                        imdb_id=str(item.get("attributes", {}).get("imdb_id", "")),
-                        feature_type=item.get("attributes", {}).get("feature_type", ""),
-                        img_url=item.get("attributes", {}).get("img_url"),
-                    )                    
-                    for item in data.get("data", [])
-                ]
-            else:
+            if response.status != 200:
                 error_message = await response.text()
                 raise Exception(f"Failed to search movies: {error_message}")
+
+            data = await response.json()
+            return [
+                MovieSearchOut(
+                    title=item.get("attributes", {}).get("title"),
+                    year=int(item.get("attributes", {}).get("year") or 0),
+                    imdb_id=str(item.get("attributes", {}).get("imdb_id", "")),
+                    feature_type=item.get("attributes", {}).get("feature_type", ""),
+                    img_url=item.get("attributes", {}).get("img_url"),
+                )                    
+                for item in data.get("data", [])
+            ]
 
     @classmethod
     async def get_subtitles(cls, imdb_id: str, language: str = "en") -> MovieOut:

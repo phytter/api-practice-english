@@ -31,7 +31,7 @@ class MovieBusiness:
         return await cls.subtitle_movie.search_movies(query)
 
     @classmethod
-    async def process_movie_dialogues (cls, imdb_id: str, language: str = "en") -> List[Dict]:
+    async def process_movie_dialogues (cls, imdb_id: str, language: str = "en") -> Dict:
         movie_subtitle = await cls.get_processed_movie(imdb_id)
         if movie_subtitle is None:
             movie_subtitle = await cls.subtitle_movie.get_subtitles(imdb_id, language)
