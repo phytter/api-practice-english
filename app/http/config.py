@@ -17,6 +17,7 @@ from .rest.v1 import (
    auth_v1,
    movie_v1,
    dialogue_v1,
+   user_v1,
 )
 
 def configure_middlewares(app: FastAPI):
@@ -53,6 +54,7 @@ def configure_routes(app: FastAPI):
   app.include_router(auth_v1)
   app.include_router(movie_v1)
   app.include_router(dialogue_v1)
+  app.include_router(user_v1)  
 
 def configure_app(app: FastAPI):
 
