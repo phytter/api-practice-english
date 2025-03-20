@@ -1,0 +1,96 @@
+name: Backend CI/CD Pipeline
+
+on:
+  push:
+    branches: [ 'ci/implementation' ]
+
+jobs:
+  test-build-deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-1
+      ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+      ECR_REPOSITORY: practice-english-backend
+      
+    steps:
+      - name: Checkout Backend Repository
+        uses: actions/checkout@v3
+        
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+          
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install flake8 pytest
+          
+      - name: Lint
+        run: flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+          
+      - name: Test
+        run: pytest
+          
+      # - name: Configure AWS Credentials
+      #   uses: aws-actions/configure-aws-credentials@v2
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: ${{ env.AWS_REGION }}
+          
+      # - name: Login to Amazon ECR
+      #   id: login-ecr
+      #   uses: aws-actions/amazon-ecr-login@v1
+          
+      # - name: Build and Push Docker Image
+      #   env:
+      #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      #   run: |
+      #     # Get the short SHA of the commit
+      #     SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
+          
+      #     # Build and tag Docker image
+      #     docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA .
+      #     docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          
+      #     # Push Docker image to ECR
+      #     docker push $ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA
+      #     docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          
+      #     # Save the image tag for later use
+      #     echo "IMAGE_TAG=$SHORT_SHA" >> $GITHUB_ENV
+          
+      # # Get infrastructure outputs and update backend services
+      # - name: Checkout Infrastructure Repository
+      #   uses: actions/checkout@v3
+      #   with:
+      #     repository: your-org/practice-english-infrastructure
+      #     path: infrastructure
+      #     token: ${{ secrets.GH_PAT }}  # Personal access token with repo access
+          
+      # - name: Setup Terraform
+      #   uses: hashicorp/setup-terraform@v2
+      #   with:
+      #     terraform_version: 1.0.0
+          
+      # - name: Get Infrastructure Outputs and Update Backend
+      #   run: |
+      #     cd infrastructure
+          
+      #     # Initialize Terraform
+      #     terraform init
+      #     terraform workspace select $ENVIRONMENT || terraform workspace new $ENVIRONMENT
+          
+      #     # Apply with variables for the new image
+      #     terraform apply -auto-approve \
+      #       -var="backend_image_tag=${{ env.IMAGE_TAG }}" \
+      #       -var="environment=$ENVIRONMENT" \
+      #       -var-file="environments/$ENVIRONMENT/terraform.tfvars"
+          
+      #     # Get the ASG name
+      #     ASG_NAME=$(terraform output -raw backend_autoscaling_group_name)
+          
+      #     # Refresh instances to use the new image
+      #     aws autoscaling start-instance-refresh --auto-scaling-group-name $ASG_NAME
