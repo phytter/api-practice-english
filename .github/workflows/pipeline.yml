@@ -14,6 +14,9 @@ jobs:
       ECR_REPOSITORY: practice-english-backend
       
     steps:
+      
+      - name: Debug Environment Variables
+        run: env
       - name: Checkout Backend Repository
         uses: actions/checkout@v3
         
