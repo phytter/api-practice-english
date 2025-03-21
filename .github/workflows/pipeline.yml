@@ -16,7 +16,9 @@ jobs:
     steps:
       
       - name: Debug Environment Variables
-        run: env
+        run: |
+          echo "AWS_ACCESS_KEY_ID is set"
+          echo "AWS_SECRET_ACCESS_KEY is set"
       - name: Checkout Backend Repository
         uses: actions/checkout@v3
         
