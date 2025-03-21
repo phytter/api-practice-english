@@ -11,13 +11,13 @@ jobs:
       AWS_REGION: us-east-1
       # ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
       ENVIRONMENT: production
-      ECR_REPOSITORY: practice-english-backend
+      ECR_REPOSITORY: practice-english-api
       AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
       
     steps:
     
-      - name: Checkout Backend Repository
+      - name: Checkout api Repository
         uses: actions/checkout@v3
         
       - name: Setup Python
