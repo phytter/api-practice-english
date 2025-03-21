@@ -48,23 +48,23 @@ jobs:
         id: login-ecr
         uses: aws-actions/amazon-ecr-login@v1
           
-      # - name: Build and Push Docker Image
-      #   env:
-      #     ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
-      #   run: |
-      #     # Get the short SHA of the commit
-      #     SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
+      - name: Build and Push Docker Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          # Get the short SHA of the commit
+          SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
           
-      #     # Build and tag Docker image
-      #     docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA .
-      #     docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          # Build and tag Docker image
+          docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA .
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA $ECR_REGISTRY/$ECR_REPOSITORY:latest
           
-      #     # Push Docker image to ECR
-      #     docker push $ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA
-      #     docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+          # Push Docker image to ECR
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
           
-      #     # Save the image tag for later use
-      #     echo "IMAGE_TAG=$SHORT_SHA" >> $GITHUB_ENV
+          # Save the image tag for later use
+          echo "IMAGE_TAG=$SHORT_SHA" >> $GITHUB_ENV
           
       # # Get infrastructure outputs and update backend services
       # - name: Checkout Infrastructure Repository
