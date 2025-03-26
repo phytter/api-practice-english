@@ -1,6 +1,9 @@
 from fastapi.encoders import jsonable_encoder
 from typing import List, TypeVar
 from app.config.mongo import Mongo
+from app.util import logging
+
+logger = logging.get_logger("business")
 
 T = TypeVar("T")
 
