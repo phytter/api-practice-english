@@ -1,0 +1,79 @@
+name: Backend CI/CD Pipeline
+
+on:
+  push:
+    branches: [ 'main' ]
+
+jobs:
+  test-build-deploy:
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: us-east-1
+      ENVIRONMENT: ${{ github.ref == 'refs/heads/main' && 'production' || 'staging' }}
+      ECR_REPOSITORY: practice-english-api
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      GOOGLE_CREDENTIALS: ${{ secrets.GOOGLE_CREDENTIALS }}
+      GH_PAT: ${{ secrets.GH_PAT }}
+      ECR_REPOSITORY_TAG: ${{ github.ref == 'refs/heads/main' && 'latest' || 'staging' }}
+
+    steps:
+
+      - name: Checkout api Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+
+      - name: Install Dependencies
+        run: |
+          pip install -r requirements.txt
+          pip install flake8 pytest
+          
+      - name: Lint
+        run: flake8 app tests --count --select=E9,F63,F7,F82 --show-source --statistics
+
+      # - name: Test
+      #   run: pytest
+
+      - name: Create Google Credentials File
+        run: |
+          echo "${{ env.GOOGLE_CREDENTIALS }}" | base64 --decode > google_credentials.json
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ env.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ env.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Login to Amazon ECR
+        id: login-ecr
+        uses: aws-actions/amazon-ecr-login@v2
+
+      - name: Build and Push Docker Image
+        env:
+          ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        run: |
+          # Get the short SHA of the commit
+          SHORT_SHA=$(echo $GITHUB_SHA | cut -c1-7)
+          
+          # Build and tag Docker image
+          docker build -f shipping/Dockerfile -t $ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA .
+          docker tag $ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA $ECR_REGISTRY/$ECR_REPOSITORY:$ECR_REPOSITORY_TAG
+          
+          # Push Docker image to ECR
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$SHORT_SHA
+          docker push $ECR_REGISTRY/$ECR_REPOSITORY:$ECR_REPOSITORY_TAG
+          
+          # Save the image tag for later use
+          echo "IMAGE_TAG=$SHORT_SHA" >> $GITHUB_ENV
+      - name: Trigger Infrastructure Pipeline
+        uses: peter-evans/repository-dispatch@v3
+        with:
+          token: ${{ env.GH_PAT }}
+          repository: phytter/infrastructure-practice-english
+          event-type: update-backend
+          client-payload: '{"image_tag": "${{ env.IMAGE_TAG }}", "environment": "${{ env.ENVIRONMENT }}"}'
