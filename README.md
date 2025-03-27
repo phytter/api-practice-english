@@ -23,7 +23,7 @@ Before you begin, make sure you have the following installed:
 1. Clone the repository:
 
     ```bash
-    git clone https://github.com/your-username/api-practice-english.git
+    git clone https://github.com/phytter/api-practice-english.git
     cd api-practice-english
     ```
 
@@ -59,6 +59,12 @@ To run the tests, use the command:
 pytest
 ```
 
+## Related Projects
+
+- [App Practice English - Frontend for this application](https://github.com/phytter/app-practice-english)
+
+- [Infrastructure Practice English - Infra as code for this application](https://github.com/phytter/infrastructure-practice-english)
+
 ## Contributing
 
 Contributions are welcome! Feel free to open issues or submit pull requests.
@@ -66,3 +72,7 @@ Contributions are welcome! Feel free to open issues or submit pull requests.
 ---
 
 Enjoy practicing your English with movie dialogues! 🎬📚
+
+### License
+
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
