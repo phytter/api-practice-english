@@ -1,22 +1,22 @@
 import re
 from typing import List, Tuple
-from app.model import DialogueIn, DialogueLine
+from app.core.dialogues.domain.dialogue_entity import DialogueEntity, DialogueLine, DialogueMovie
 
 class SubtitlesBussiness:
 
     @classmethod
-    def process_subtitle_content(cls, content: str) -> List[DialogueIn]:
+    def process_subtitle_content(cls, content: str, movie: DialogueMovie = None) -> List[DialogueEntity]:
         """Process subtitle content into structured dialogues"""
 
         dialogue_lines = cls._extract_dialogues(content)
         difficulty_level = cls._calculate_difficulty(dialogue_lines)
         scenes = cls._group_into_scenes(dialogue_lines)
 
-        return [DialogueIn(
-            lines = [dict(line) for line in scene],
-            duration_seconds = scene[-1].end_time - scene[0].start_time,
-            difficulty_level = difficulty_level,
-            characters = list(set(line.character for line in scene)),
+        return [DialogueEntity(
+            lines=scene,
+            duration_seconds=scene[-1].end_time - scene[0].start_time,
+            difficulty_level=difficulty_level,
+            movie=movie
         ) for scene in scenes]
 
     @classmethod

@@ -3,11 +3,14 @@ from datetime import datetime, timezone
 from app.integration.connector import get_subtitle_movie_connector
 from app.model import MovieSearchOut, MovieOut, MovieIn
 from app.business.subtitles_bo import SubtitlesBussiness
+from app.core.dialogues.domain.dialogue_entity import DialogueMovie
 from app.integration import Mongo
 from .base import cursor_to_list
+from app.core.dialogues.infra.database.repositories.dialogue_mongo_repo import DialogueMongoRepository
 
 class MovieBusiness:
     subtitle_movie = get_subtitle_movie_connector()
+    dialogue_repo = DialogueMongoRepository()
 
     async def get_processed_movie(imdb_id: str) -> Optional[MovieOut]:
         cache_item = await Mongo.movies_processed.find_one({
@@ -37,27 +40,21 @@ class MovieBusiness:
             movie_subtitle = await cls.subtitle_movie.get_subtitles(imdb_id, language)
             await cls.store_processed_movie(movie_subtitle)
         
-        dialogues = SubtitlesBussiness.process_subtitle_content(movie_subtitle.content)
-
-        movie_info = {
-            "imdb_id": imdb_id,
-            "title": movie_subtitle.title or "Unknown",
-            "year": movie_subtitle.year,
-            "language": language
-        }
+        movie = DialogueMovie(
+            imdb_id=imdb_id,
+            title=movie_subtitle.title or "Unknown",
+            language=language
+        )
+            # Process subtitles using domain service
+        dialogue_entities = SubtitlesBussiness.process_subtitle_content(movie_subtitle.content, movie)
         
-        dialogue_docs = [
-            {
-                **dialogue.model_dump(),
-                "movie": movie_info
-            }
-            for dialogue in dialogues
-        ]
-        
-        if dialogue_docs:
-            await Mongo.dialogues.insert_many(dialogue_docs)
+        if dialogue_entities:
+            saved_entities = await cls.dialogue_repo.create_many(dialogue_entities)
+            dialogues_count = len(saved_entities)
+        else:
+            dialogues_count = 0
 
-        return {"message": "Subtitles processed successfully", "dialogues_count": len(dialogues)}
+        return {"message": "Subtitles processed successfully", "dialogues_count": dialogues_count}
     
     @classmethod
     async def search_processed_movies(cls, search: Optional[str] = None, skip: int = 0, limit: int = 20) -> MovieOut:
