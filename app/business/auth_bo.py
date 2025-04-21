@@ -6,9 +6,11 @@ from fastapi import HTTPException, status, Depends, Request
 from jose import JWTError, jwt
 from fastapi.security import OAuth2AuthorizationCodeBearer
 
-from app.model import UserIn, UserOut, GoogleLoginData, ObjectId
+from app.model import UserOut, GoogleLoginData
 from app.core.config import settings
-from .base import Mongo
+from app.core.users.infra.database.repositories import UserMongoRepository
+from app.core.users.domain.user_entity import UserEntity, UserProgress
+from app.core.users.application.user_mapper import UserMapper
 
 class AuthBusiness:
 
@@ -16,6 +18,7 @@ class AuthBusiness:
         authorizationUrl="https://accounts.google.com/o/oauth2/v2/auth",
         tokenUrl="https://oauth2.googleapis.com/token"
     )
+    user_repo = UserMongoRepository()
 
     @classmethod
     async def google_login_service(cls, token_data: GoogleLoginData):
@@ -30,34 +33,33 @@ class AuthBusiness:
                 )
             google_id = idinfo['sub']
 
-            user = await Mongo.users.find_one({"google_id": google_id})
+            user_entity = await cls.user_repo.find_by_google_id(google_id)
             
-            if not user:
-                user_data = UserIn(
+            if not user_entity:
+                user_entity = UserEntity(
                     email=idinfo['email'],
                     name=idinfo['name'],
-                    picture=idinfo.get('picture'),
+                    picture=idinfo.get('picture', ''),
                     google_id=idinfo['sub'],
                     achievements=[],
                     created_at=datetime.now(timezone.utc),
-                    last_login=datetime.now(timezone.utc)
+                    last_login=datetime.now(timezone.utc),
+                    progress=UserProgress()
                 )
-                await Mongo.users.insert_one(user_data.model_dump())
+                await cls.user_repo.create(user_entity)
             else:
-                await Mongo.users.update_one(
-                    {"google_id": google_id },
-                    {"$set": {"last_login": datetime.now(timezone.utc)}}
-                )
+                # Update last login
+                user_entity.last_login = datetime.now(timezone.utc)
+                await cls.user_repo.update(user_entity.id, user_entity)
 
-            user = await Mongo.users.find_one({"google_id": google_id})
-            user = UserOut(**user)
+            user_dto = UserMapper.to_dto(user_entity)
 
-            access_token = cls.create_access_token(data={"sub": str(user.id)})
+            access_token = cls.create_access_token(data={"sub": str(user_dto.id)})
             
             return {
                 "access_token": access_token,
                 "token_type": "bearer",
-                "user": user
+                "user": user_dto
             }
 
         except ValueError:
@@ -92,8 +94,9 @@ class AuthBusiness:
             headers={"WWW-Authenticate": "Bearer"},
         )
 
-    @staticmethod
+    @classmethod
     async def validate_auth(
+        cls,
         request: Request,
         token: str = Depends(oauth2_scheme),
     ) -> UserOut:
@@ -113,8 +116,8 @@ class AuthBusiness:
         except JWTError:
             raise credentials_exception     
 
-        user = await Mongo.users.find_one({"_id": ObjectId(user_id)})
-        if user is None:
+        user_entity = await cls.user_repo.find_by_id(user_id)
+        if user_entity is None:
             raise credentials_exception
 
-        request.state.user = UserOut(**user)
+        request.state.user = UserMapper.to_dto(user_entity)
