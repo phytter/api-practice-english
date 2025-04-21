@@ -3,13 +3,12 @@ from bson import ObjectId
 import logging
 
 from app.integration.mongo import Mongo
-from app.core.common.domain.repository import Repository
-from app.core.users.domain import UserEntity
+from app.core.users.domain import UserEntity, UserRepository
 from app.core.users.application import UserMapper
 
 logger = logging.getLogger(__name__)
 
-class UserMongoRepository(Repository[UserEntity]):
+class UserMongoRepository(UserRepository):
     """MongoDB implementation of the UserRepository"""
     
     async def create(self, entity: UserEntity) -> UserEntity:

@@ -3,14 +3,13 @@ from bson import ObjectId
 import logging
 
 from app.integration.mongo import Mongo
-from app.core.common.domain.repository import Repository
-from app.core.dialogues.domain import DialoguePracticeHistoryEntity
+from app.core.dialogues.domain import DialoguePracticeHistoryEntity, DialoguePracticeHistoryRepository
 from app.core.dialogues.application import DialogueMapper, DialoguePracticeHistoryMapper
 
 logger = logging.getLogger(__name__)
 
-class PracticeHistoryMongoRepository(Repository[DialoguePracticeHistoryEntity]):
-    """MongoDB implementation of the PracticeHistoryRepository"""
+class DialoguePracticeHistoryMongoRepository(DialoguePracticeHistoryRepository):
+    """MongoDB implementation of the DialoguePracticeHistoryRepository"""
     
     async def create(self, entity: DialoguePracticeHistoryEntity) -> DialoguePracticeHistoryEntity:
         """Create a new practice history document"""

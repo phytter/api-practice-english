@@ -5,7 +5,7 @@ from fastapi import HTTPException, status
 from app.model import DialogueOut, PracticeResult, DialoguePracticeHistoryOut, UserOut
 from app.integration.audio_processor import AudioProcessor
 from app.business.user_bo import UserBusiness
-from app.core.dialogues.infra.database.repositories import DialogueMongoRepository, PracticeHistoryMongoRepository
+from app.core.dialogues.infra.database.repositories import DialogueMongoRepository, DialoguePracticeHistoryMongoRepository
 from app.core.dialogues.application import DialogueMapper, DialoguePracticeHistoryMapper
 from app.core.dialogues.domain import DialoguePracticeHistoryEntity
 
@@ -16,7 +16,7 @@ class DialogueBusiness:
     PRONUNCIATION_THRESHOLD = 0.8
     FLUENCY_THRESHOLD = 0.7
     dialogue_repo = DialogueMongoRepository()
-    dialogue_practice_history_repo = PracticeHistoryMongoRepository()
+    dialogue_practice_history_repo = DialoguePracticeHistoryMongoRepository()
 
     @classmethod
     async def search_dialogues(

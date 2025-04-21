@@ -5,7 +5,7 @@ from app.business.subtitles_bo import SubtitlesBussiness
 from app.core.dialogues.domain.dialogue_entity import DialogueMovie
 from app.core.movies.infra.database.repositories import MovieProcessedMongoRepository
 from app.core.movies.application import MovieMapper
-from app.core.dialogues.infra.database.repositories.dialogue_mongo_repo import DialogueMongoRepository
+from app.core.dialogues.infra.database.repositories import DialogueMongoRepository
 
 class MovieBusiness:
     subtitle_movie = get_subtitle_movie_connector()

@@ -3,13 +3,12 @@ from bson import ObjectId
 import logging
 
 from app.integration.mongo import Mongo
-from app.core.common.domain.repository import Repository
-from app.core.movies.domain import MovieEntity
+from app.core.movies.domain import MovieEntity, MovieRepository
 from app.core.movies.application import MovieMapper
 
 logger = logging.getLogger(__name__)
 
-class MovieProcessedMongoRepository(Repository[MovieEntity]):
+class MovieProcessedMongoRepository(MovieRepository):
     """MongoDB implementation of the MovieProcessedMongoRepository"""
     
     async def create(self, entity: MovieEntity) -> MovieEntity:

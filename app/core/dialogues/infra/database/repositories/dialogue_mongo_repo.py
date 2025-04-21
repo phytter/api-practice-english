@@ -1,16 +1,14 @@
-# app/core/dialogues/infra/database/repositories/dialogue_mongo_repo.py
 from typing import List, Dict, Any, Optional
 from bson import ObjectId
 import logging
 
 from app.integration.mongo import Mongo
-from app.core.common.domain.repository import Repository
-from app.core.dialogues.domain.dialogue_entity import DialogueEntity
-from app.core.dialogues.application.dialogue_mapper import DialogueMapper
+from app.core.dialogues.domain import DialogueEntity, DialogueRepository
+from app.core.dialogues.application import DialogueMapper
 
 logger = logging.getLogger(__name__)
 
-class DialogueMongoRepository(Repository[DialogueEntity]):
+class DialogueMongoRepository(DialogueRepository):
     """MongoDB implementation of the DialogueRepository"""
     
     async def create(self, entity: DialogueEntity) -> DialogueEntity:
