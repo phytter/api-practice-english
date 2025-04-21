@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field, ConfigDict
 from typing import List, Optional
 from datetime import datetime
-from .base import MongoObjectId
+from app.core.common.application.dto import MongoObjectId
 
 class DialogueLine(BaseModel):
     character: Optional[str] = ''

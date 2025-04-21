@@ -6,7 +6,8 @@ from fastapi import HTTPException, status, Depends, Request
 from jose import JWTError, jwt
 from fastapi.security import OAuth2AuthorizationCodeBearer
 
-from app.model import UserOut, GoogleLoginData
+from app.core.common.application.dto import GoogleLoginData
+from app.core.users.application.dto.user_dto import UserOut
 from app.core.config import settings
 from app.core.users.infra.database.repositories import UserMongoRepository
 from app.core.users.domain import UserEntity, UserProgress

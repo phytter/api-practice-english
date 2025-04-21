@@ -1,6 +1,6 @@
 from typing import List, Dict, Optional
 from app.integration.connector import get_subtitle_movie_connector
-from app.model import MovieSearchOut, MovieOut, MovieIn
+from app.core.movies.application.dto.movie_dto import MovieSearchOut, MovieOut, MovieIn
 from app.business.subtitles_bo import SubtitlesBussiness
 from app.core.dialogues.domain.dialogue_entity import DialogueMovie
 from app.core.movies.infra.database.repositories import MovieProcessedMongoRepository

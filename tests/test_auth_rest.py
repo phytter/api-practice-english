@@ -1,7 +1,7 @@
 import pytest
 from httpx import AsyncClient
 from unittest.mock import patch
-from app.model import GoogleLoginData
+from app.core.common.application.dto import GoogleLoginData
 from app.http.rest.v1 import auth_v1
 import pytest_asyncio
 from datetime import datetime, timezone

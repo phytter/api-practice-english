@@ -2,7 +2,8 @@ from typing import List
 from datetime import datetime, timezone
 import logging
 from fastapi import HTTPException, status
-from app.model import DialogueOut, PracticeResult, DialoguePracticeHistoryOut, UserOut
+from app.core.dialogues.application.dto.dialogue_dto import DialogueOut, PracticeResult, DialoguePracticeHistoryOut
+from app.core.users.application.dto.user_dto import UserOut
 from app.integration.audio_processor import AudioProcessor
 from app.business.user_bo import UserBusiness
 from app.core.dialogues.infra.database.repositories import DialogueMongoRepository, DialoguePracticeHistoryMongoRepository

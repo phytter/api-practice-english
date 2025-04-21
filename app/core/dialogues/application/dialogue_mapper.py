@@ -1,6 +1,7 @@
 from typing import Dict, Any
-from app.model.dialogue import DialogueIn, DialogueOut, DialoguePracticeHistoryIn, DialoguePracticeHistoryOut
+from app.core.dialogues.application.dto.dialogue_dto import DialogueIn, DialogueOut
 from app.core.dialogues.domain.dialogue_entity import DialogueEntity, DialogueLine, DialogueMovie
+from app.core.common.application.dto import MongoObjectId
 
 class DialogueMapper:
     @staticmethod
@@ -55,7 +56,6 @@ class DialogueMapper:
             }
         
         if entity.id:
-            from app.model.base import MongoObjectId
             dto_dict["_id"] = MongoObjectId(entity.id)
             
         return DialogueOut(**dto_dict)

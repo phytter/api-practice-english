@@ -2,7 +2,7 @@ from typing import List
 from app.integration.http_client import HttpClient
 from app.core.config import settings
 from app.core.ports import SubtitleMovies
-from app.model import MovieSearchOut, MovieOut
+from app.core.movies.application.dto.movie_dto import MovieSearchOut, MovieOut
 from datetime import datetime
 
 class OpenSubTitles(SubtitleMovies):

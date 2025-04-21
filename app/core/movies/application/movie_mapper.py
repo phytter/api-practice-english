@@ -1,8 +1,8 @@
 from typing import Dict, Any
 from dateutil import parser
-from app.model.movie import MovieIn, MovieOut
+from app.core.movies.application.dto.movie_dto import MovieIn, MovieOut
 from app.core.movies.domain import MovieEntity
-from app.model.base import MongoObjectId
+from app.core.common.application.dto import MongoObjectId
 
 class MovieMapper:
     @staticmethod

@@ -1,7 +1,7 @@
 from typing import Dict, List, Optional, Any
 
 from bson import ObjectId
-from pydantic import BaseModel, Field, PositiveFloat, EmailStr, GetCoreSchemaHandler
+from pydantic import BaseModel, Field, EmailStr, GetCoreSchemaHandler
 
 from pydantic_core import core_schema
 
@@ -44,7 +44,6 @@ class MongoObjectId(str):
 __all__ = (
     "BaseModel",
     "Field",
-    "PositiveFloat",
     "ObjectId",
     "MongoObjectId",
     "PyObjectId",

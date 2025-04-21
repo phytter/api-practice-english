@@ -1,6 +1,7 @@
 # Updated UserBusiness class
 from fastapi import HTTPException, status
-from app.model import UserOut, PracticeResult
+from app.core.users.application.dto.user_dto import UserOut
+from app.core.dialogues.application.dto.dialogue_dto import PracticeResult
 from app.core.users.infra.database.repositories import UserMongoRepository
 from app.core.users.application import UserMapper
 

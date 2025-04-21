@@ -4,7 +4,7 @@ from unittest.mock import patch
 from httpx import AsyncClient
 from app.http.rest.v1 import dialogue_v1
 from app.integration.mongo import Mongo
-from app.model import ObjectId
+from app.core.common.application.dto import ObjectId
 import io
 from google.cloud import speech_v1
 from pydub import AudioSegment

@@ -1,9 +1,10 @@
 from typing import Dict, Any
 from dateutil import parser
 from datetime import datetime, timezone
-from app.model.dialogue import DialoguePracticeHistoryIn, DialoguePracticeHistoryOut
+from app.core.dialogues.application.dto.dialogue_dto import DialoguePracticeHistoryIn, DialoguePracticeHistoryOut
 from app.core.dialogues.domain.dialogue_practice_history_entity import DialoguePracticeHistoryEntity
 from app.core.dialogues.application.dialogue_mapper import DialogueMapper
+from app.core.common.application.dto import MongoObjectId
 
 class DialoguePracticeHistoryMapper:
     @staticmethod
@@ -24,7 +25,6 @@ class DialoguePracticeHistoryMapper:
     @staticmethod
     def to_dto(entity: DialoguePracticeHistoryEntity, include_dialogue: bool = False) -> DialoguePracticeHistoryOut:
         """Convert entity to DTO"""
-        from app.model.base import MongoObjectId
         
         dto_dict = {
             "dialogue_id": entity.dialogue_id,
