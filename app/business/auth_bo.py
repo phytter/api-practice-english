@@ -9,8 +9,8 @@ from fastapi.security import OAuth2AuthorizationCodeBearer
 from app.model import UserOut, GoogleLoginData
 from app.core.config import settings
 from app.core.users.infra.database.repositories import UserMongoRepository
-from app.core.users.domain.user_entity import UserEntity, UserProgress
-from app.core.users.application.user_mapper import UserMapper
+from app.core.users.domain import UserEntity, UserProgress
+from app.core.users.application import UserMapper
 
 class AuthBusiness:
 

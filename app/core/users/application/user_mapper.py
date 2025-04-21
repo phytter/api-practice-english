@@ -1,7 +1,7 @@
 from typing import Dict, Any
 from datetime import timezone
 from app.model.user import UserIn, UserOut, UserProgress as UserProgressDTO, Achievement as AchievementDTO
-from app.core.users.domain.user_entity import UserEntity, UserProgress, Achievement
+from app.core.users.domain import UserEntity, UserProgress, Achievement
 from app.model.base import MongoObjectId
 
 def ensure_timezone_aware(dt):

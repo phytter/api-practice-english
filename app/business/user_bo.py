@@ -2,7 +2,7 @@
 from fastapi import HTTPException, status
 from app.model import UserOut, PracticeResult
 from app.core.users.infra.database.repositories import UserMongoRepository
-from app.core.users.application.user_mapper import UserMapper
+from app.core.users.application import UserMapper
 
 class UserBusiness:
     user_repo = UserMongoRepository()

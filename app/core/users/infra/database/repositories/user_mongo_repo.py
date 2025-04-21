@@ -4,8 +4,8 @@ import logging
 
 from app.integration.mongo import Mongo
 from app.core.common.domain.repository import Repository
-from app.core.users.domain.user_entity import UserEntity
-from app.core.users.application.user_mapper import UserMapper
+from app.core.users.domain import UserEntity
+from app.core.users.application import UserMapper
 
 logger = logging.getLogger(__name__)
 
