@@ -5,9 +5,8 @@ from fastapi import HTTPException, status
 from app.model import DialogueOut, PracticeResult, DialoguePracticeHistoryOut, UserOut
 from app.integration.audio_processor import AudioProcessor
 from app.business.user_bo import UserBusiness
-from app.core.dialogues.application.dialogue_mapper import DialogueMapper
 from app.core.dialogues.infra.database.repositories import DialogueMongoRepository, PracticeHistoryMongoRepository
-from app.core.dialogues.application.dialogue_practice_history_mapper import DialoguePracticeHistoryMapper
+from app.core.dialogues.application import DialogueMapper, DialoguePracticeHistoryMapper
 from app.core.dialogues.domain import DialoguePracticeHistoryEntity
 
 logger = logging.getLogger(__name__)

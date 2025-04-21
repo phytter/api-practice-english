@@ -5,8 +5,7 @@ import logging
 from app.integration.mongo import Mongo
 from app.core.common.domain.repository import Repository
 from app.core.dialogues.domain import DialoguePracticeHistoryEntity
-from app.core.dialogues.application.dialogue_practice_history_mapper import DialoguePracticeHistoryMapper
-from app.core.dialogues.application.dialogue_mapper import DialogueMapper
+from app.core.dialogues.application import DialogueMapper, DialoguePracticeHistoryMapper
 
 logger = logging.getLogger(__name__)
 
