@@ -1,6 +1,7 @@
 from typing import List, Any, Optional
 from datetime import datetime, timezone
 from app.core.common.domain.entity import Entity
+from app.core.common.domain.value_objects import Email, Score, XpPoints
 
 class Achievement:
     def __init__(
@@ -27,15 +28,13 @@ class UserProgress:
     ):
         self.total_practice_time_seconds = total_practice_time_seconds
         self.total_dialogues = total_dialogues
-        self.average_pronunciation_score = average_pronunciation_score
-        self.average_fluency_score = average_fluency_score
+        self.average_pronunciation_score = Score(average_pronunciation_score)
+        self.average_fluency_score = Score(average_fluency_score)
         self.level = level
-        self.xp_points = xp_points
+        self.xp_points = XpPoints(xp_points)
         self._validate()
     
     def _validate(self):
-        if self.xp_points < 0:
-            raise ValueError("XP points cannot be negative")
         if self.total_practice_time_seconds < 0:
             raise ValueError("Practice time cannot be negative")
         if self.total_dialogues < 0:
@@ -44,20 +43,20 @@ class UserProgress:
     def update_with_practice_result(self, pronunciation_score: float, fluency_score: float, xp_earned: int):
         """Update progress with a new practice result"""
         self.total_dialogues += 1
-        self.xp_points += xp_earned
+        self.xp_points = self.xp_points.add(xp_earned)
         
         self.average_pronunciation_score = self._calculate_average_score(
-            self.average_pronunciation_score, pronunciation_score, self.total_dialogues
+            self.average_pronunciation_score.value, pronunciation_score, self.total_dialogues
         )
         self.average_fluency_score = self._calculate_average_score(
-            self.average_fluency_score, fluency_score, self.total_dialogues
+            self.average_fluency_score.value, fluency_score, self.total_dialogues
         )
         
-        self.level = self._calculate_level(self.xp_points)
+        self.level = self._calculate_level(self.xp_points.value)
     
     def _calculate_average_score(self, current_average: float, new_score: float, total_practices: int) -> float:
         """Calculate the new average score"""
-        return (current_average * (total_practices - 1) + new_score) / total_practices
+        return Score((current_average * (total_practices - 1) + new_score) / total_practices)
     
     def _calculate_level(self, xp: int) -> int:
         """Calculate user level based on XP"""
@@ -83,7 +82,7 @@ class UserEntity(Entity):
         id: str = None
     ):
         self.id = id
-        self.email = email
+        self.email = Email(email)
         self.name = name
         self.picture = picture
         self.google_id = google_id
@@ -117,7 +116,7 @@ class UserEntity(Entity):
     def entity_dump(self) -> dict[str, Any]:
         """Convert entity to dictionary for persistence"""
         return {
-            "email": self.email,
+            "email": self.email.value,
             "name": self.name,
             "picture": self.picture,
             "google_id": self.google_id,
@@ -134,9 +133,9 @@ class UserEntity(Entity):
             "progress": {
                 "total_practice_time_seconds": self.progress.total_practice_time_seconds,
                 "total_dialogues": self.progress.total_dialogues,
-                "average_pronunciation_score": self.progress.average_pronunciation_score,
-                "average_fluency_score": self.progress.average_fluency_score,
+                "average_pronunciation_score": self.progress.average_pronunciation_score.value,
+                "average_fluency_score": self.progress.average_fluency_score.value,
                 "level": self.progress.level,
-                "xp_points": self.progress.xp_points
+                "xp_points": self.progress.xp_points.value
             }
         }

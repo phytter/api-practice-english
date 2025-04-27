@@ -61,14 +61,14 @@ class UserMapper:
         progress = UserProgressDTO(
             total_practice_time_seconds=entity.progress.total_practice_time_seconds,
             total_dialogues=entity.progress.total_dialogues,
-            average_pronunciation_score=entity.progress.average_pronunciation_score,
-            average_fluency_score=entity.progress.average_fluency_score,
+            average_pronunciation_score=entity.progress.average_pronunciation_score.value,
+            average_fluency_score=entity.progress.average_fluency_score.value,
             level=entity.progress.level,
-            xp_points=entity.progress.xp_points
+            xp_points=entity.progress.xp_points.value
         )
         
         user_dict = {
-            "email": entity.email,
+            "email": entity.email.value,
             "name": entity.name,
             "picture": entity.picture,
             "google_id": entity.google_id,
