@@ -12,7 +12,7 @@ class SubtitlesBussiness:
         difficulty_level = cls._calculate_difficulty(dialogue_lines)
         scenes = cls._group_into_scenes(dialogue_lines)
 
-        return [DialogueEntity(
+        return [DialogueEntity.create(
             lines=scene,
             duration_seconds=scene[-1].end_time - scene[0].start_time,
             difficulty_level=difficulty_level,

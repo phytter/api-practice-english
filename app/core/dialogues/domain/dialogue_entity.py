@@ -36,6 +36,15 @@ class DialogueEntity(Entity):
         self.duration_seconds = duration_seconds
         self.lines = lines
         self._validate()
+
+    def create(
+        difficulty_level: int,
+        duration_seconds: float,
+        lines: List[DialogueLine],
+        movie: Optional[DialogueMovie] = None,
+        id: str = None
+    ):
+        return DialogueEntity(difficulty_level, duration_seconds, lines, movie, id)
     
     def _validate(self) -> None:
         self._validate_difficulty_level()

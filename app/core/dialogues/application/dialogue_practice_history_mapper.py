@@ -10,7 +10,7 @@ class DialoguePracticeHistoryMapper:
     @staticmethod
     def to_entity(practice_dto: DialoguePracticeHistoryIn) -> DialoguePracticeHistoryEntity:
         """Convert DTO to entity"""
-        return DialoguePracticeHistoryEntity(
+        return DialoguePracticeHistoryEntity.create(
             id=str(practice_dto.id) if hasattr(practice_dto, 'id') and practice_dto.id else None,
             dialogue_id=practice_dto.dialogue_id,
             user_id=practice_dto.user_id,
@@ -29,12 +29,12 @@ class DialoguePracticeHistoryMapper:
         dto_dict = {
             "dialogue_id": entity.dialogue_id,
             "user_id": entity.user_id,
-            "pronunciation_score": entity.pronunciation_score,
-            "fluency_score": entity.fluency_score,
+            "pronunciation_score": entity.pronunciation_score.value,
+            "fluency_score": entity.fluency_score.value,
             "completed_at": entity.completed_at,
             "practice_duration_seconds": entity.practice_duration_seconds,
             "character_played": entity.character_played,
-            "xp_earned": entity.xp_earned
+            "xp_earned": entity.xp_earned.value
         }
         
         if entity.id:
@@ -56,7 +56,7 @@ class DialoguePracticeHistoryMapper:
             except Exception as e:
                 completed_at = datetime.now(timezone.utc)
 
-        return DialoguePracticeHistoryEntity(
+        return DialoguePracticeHistoryEntity.create(
             id=str(doc["_id"]),
             dialogue_id=doc["dialogue_id"],
             user_id=doc["user_id"],

@@ -16,9 +16,33 @@ class Achievement:
         self.description = description
         self.earned_at = earned_at
 
+    def create(
+        id: str,
+        name: str,
+        description: str,
+        earned_at: datetime
+    ):
+        return Achievement(id, name, description, earned_at)
+
 class UserProgress:
     def __init__(
         self,
+        total_practice_time_seconds: int = 0,
+        total_dialogues: int = 0,
+        average_pronunciation_score: Score = Score(0.0),
+        average_fluency_score: Score = Score(0.0),
+        level: int = 1,
+        xp_points: XpPoints = XpPoints(0)
+    ):
+        self.total_practice_time_seconds = total_practice_time_seconds
+        self.total_dialogues = total_dialogues
+        self.average_pronunciation_score = average_pronunciation_score
+        self.average_fluency_score = average_fluency_score
+        self.level = level
+        self.xp_points = xp_points
+        self._validate()
+
+    def create(
         total_practice_time_seconds: int = 0,
         total_dialogues: int = 0,
         average_pronunciation_score: float = 0.0,
@@ -26,13 +50,15 @@ class UserProgress:
         level: int = 1,
         xp_points: int = 0
     ):
-        self.total_practice_time_seconds = total_practice_time_seconds
-        self.total_dialogues = total_dialogues
-        self.average_pronunciation_score = Score(average_pronunciation_score)
-        self.average_fluency_score = Score(average_fluency_score)
-        self.level = level
-        self.xp_points = XpPoints(xp_points)
-        self._validate()
+        return UserProgress(
+            total_practice_time_seconds=total_practice_time_seconds,
+            total_dialogues=total_dialogues,
+            average_pronunciation_score=Score(average_pronunciation_score),
+            average_fluency_score=Score(average_fluency_score),
+            level=level,
+            xp_points=XpPoints(xp_points)
+        )
+        
     
     def _validate(self):
         if self.total_practice_time_seconds < 0:
@@ -71,7 +97,7 @@ class UserProgress:
 class UserEntity(Entity):
     def __init__(
         self,
-        email: str,
+        email: Email,
         name: str,
         created_at: datetime,
         last_login: datetime,
@@ -82,14 +108,38 @@ class UserEntity(Entity):
         id: str = None
     ):
         self.id = id
-        self.email = Email(email)
+        self.email = email
         self.name = name
         self.picture = picture
         self.google_id = google_id
         self.achievements = achievements or []
         self.created_at = created_at
         self.last_login = last_login
-        self.progress = progress or UserProgress()
+        self.progress = progress
+
+
+    def create(
+        email: str,
+        name: str,
+        created_at: datetime,
+        last_login: datetime,
+        google_id: str = '',
+        picture: str = '',
+        achievements: List[Achievement] = None,
+        progress: UserProgress = None,
+        id: str = None
+    ):
+        return UserEntity(
+            email=Email(email),
+            name=name,
+            created_at=created_at,
+            last_login=last_login,
+            google_id=google_id,
+            picture=picture,
+            achievements=achievements,
+            progress=progress or UserProgress(),
+            id=id
+        )
     
     def update_progress(self, pronunciation_score: float, fluency_score: float, xp_earned: int) -> Optional[Achievement]:
         """Update user progress and return a new achievement if earned"""
@@ -106,7 +156,7 @@ class UserEntity(Entity):
     
     def _create_level_up_achievement(self, level: int) -> Achievement:
         """Create an achievement for leveling up"""
-        return Achievement(
+        return Achievement.create(
             id=f"level_{level}",
             name=f"Level {level} Achieved",
             description=f"Congratulations! You've reached level {level}.",

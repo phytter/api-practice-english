@@ -15,7 +15,7 @@ class UserMapper:
 
         achievements = []
         for ach_dto in user_dto.achievements:
-            achievements.append(Achievement(
+            achievements.append(Achievement.create(
                 id=ach_dto.id,
                 name=ach_dto.name,
                 description=ach_dto.description,
@@ -24,7 +24,7 @@ class UserMapper:
         
         progress = None
         if user_dto.progress:
-            progress = UserProgress(
+            progress = UserProgress.create(
                 total_practice_time_seconds=user_dto.progress.total_practice_time_seconds,
                 total_dialogues=user_dto.progress.total_dialogues,
                 average_pronunciation_score=user_dto.progress.average_pronunciation_score,
@@ -33,7 +33,7 @@ class UserMapper:
                 xp_points=user_dto.progress.xp_points
             )
         
-        return UserEntity(
+        return UserEntity.create(
             id=str(user_dto.id) if hasattr(user_dto, 'id') and user_dto.id else None,
             email=user_dto.email,
             name=user_dto.name,
@@ -85,11 +85,11 @@ class UserMapper:
     
     @staticmethod
     def from_document_to_entity(doc: Dict[str, Any]) -> UserEntity:
-        """Convert MongoDB document directly to entity"""
+        """Convert document directly to entity"""
         
         achievements = []
         for ach_doc in doc.get("achievements", []):
-            achievements.append(Achievement(
+            achievements.append(Achievement.create(
                 id=ach_doc["id"],
                 name=ach_doc["name"],
                 description=ach_doc["description"],
@@ -97,7 +97,7 @@ class UserMapper:
             ))
 
         progress_doc = doc.get("progress", {})
-        progress = UserProgress(
+        progress = UserProgress.create(
             total_practice_time_seconds=progress_doc.get("total_practice_time_seconds", 0),
             total_dialogues=progress_doc.get("total_dialogues", 0),
             average_pronunciation_score=progress_doc.get("average_pronunciation_score", 0.0),
@@ -106,7 +106,7 @@ class UserMapper:
             xp_points=progress_doc.get("xp_points", 0)
         )
 
-        return UserEntity(
+        return UserEntity.create(
             id=str(doc["_id"]),
             email=doc["email"],
             name=doc["name"],

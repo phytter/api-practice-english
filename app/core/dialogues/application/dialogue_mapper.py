@@ -24,7 +24,7 @@ class DialogueMapper:
             ) for line in dialogue_dto.lines
         ]
         
-        return DialogueEntity(
+        return DialogueEntity.create(
             difficulty_level=dialogue_dto.difficulty_level,
             duration_seconds=dialogue_dto.duration_seconds,
             lines=lines,
@@ -82,7 +82,7 @@ class DialogueMapper:
                 end_time=line_data["end_time"]
             ))
         
-        return DialogueEntity(
+        return DialogueEntity.create(
             id=str(doc["_id"]),
             movie=movie,
             difficulty_level=doc["difficulty_level"],

@@ -37,7 +37,7 @@ class AuthBusiness:
             user_entity = await cls.user_repo.find_by_google_id(google_id)
             
             if not user_entity:
-                user_entity = UserEntity(
+                user_entity = UserEntity.create(
                     email=idinfo['email'],
                     name=idinfo['name'],
                     picture=idinfo.get('picture', ''),
