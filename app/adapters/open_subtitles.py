@@ -10,7 +10,8 @@ class OpenSubTitles(SubtitleMovies):
     base_url: str = settings.OPENSUBTITLES_API_URL
     default_headers = {
         "Api-Key": settings.OPENSUBTITLES_API_KEY,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "User-Agent": "practice_english/1.0"
     }
 
     @classmethod
