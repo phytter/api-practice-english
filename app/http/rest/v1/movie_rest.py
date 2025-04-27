@@ -2,7 +2,7 @@ from app.core.config import settings
 from fastapi import APIRouter, Depends
 from app.business import MovieBusiness, AuthBusiness
 from typing import List, Dict, Optional
-from app.model import MovieSearchOut, MovieOut
+from app.core.movies.application.dto.movie_dto import MovieSearchOut, MovieOut
 
 
 movie_v1 = APIRouter(

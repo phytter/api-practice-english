@@ -2,11 +2,13 @@ from typing import List
 from datetime import datetime, timezone
 import logging
 from fastapi import HTTPException, status
-from app.model import DialogueOut, ObjectId, PracticeResult, DialoguePracticeHistoryIn, DialoguePracticeHistoryOut, UserOut
-from app.integration.mongo import Mongo
+from app.core.dialogues.application.dto.dialogue_dto import DialogueOut, PracticeResult, DialoguePracticeHistoryOut
+from app.core.users.application.dto.user_dto import UserOut
 from app.integration.audio_processor import AudioProcessor
 from app.business.user_bo import UserBusiness
-from .base import cursor_to_list
+from app.core.dialogues.infra.database.repositories import DialogueMongoRepository, DialoguePracticeHistoryMongoRepository
+from app.core.dialogues.application import DialogueMapper, DialoguePracticeHistoryMapper
+from app.core.dialogues.domain import DialoguePracticeHistoryEntity
 
 logger = logging.getLogger(__name__)
 
@@ -14,6 +16,8 @@ class DialogueBusiness:
     PAUSE_WORD_THRESHOLD_SECONDS = 0.1
     PRONUNCIATION_THRESHOLD = 0.8
     FLUENCY_THRESHOLD = 0.7
+    dialogue_repo = DialogueMongoRepository()
+    dialogue_practice_history_repo = DialoguePracticeHistoryMongoRepository()
 
     @classmethod
     async def search_dialogues(
@@ -23,25 +27,21 @@ class DialogueBusiness:
         skip: int = 0,
         limit: int = 20,
     ) -> List[DialogueOut]:
-        query = {}
-        if search:
-            query["$or"] = [
-                {"movie.title": {"$regex": search, "$options": "i"}},
-                {"lines.text": {"$regex": search, "$options": "i"}},
-            ]
-        if imdb_id:
-            query["movie.imdb_id"] = imdb_id
-        cursor = Mongo.dialogues.find(query).skip(skip).limit(limit)
-        return await cursor_to_list(DialogueOut, cursor)
+
+        entities = await cls.dialogue_repo.find_with_filters({ "imdb_id": imdb_id, "search": search }, skip, limit)    
+        return [DialogueMapper.to_dto(entity) for entity in entities]
     
     @classmethod
     async def get_dialogue (cls, dialogue_id: str) -> DialogueOut:
-        if (dialogue :=  await Mongo.dialogues.find_one({"_id": ObjectId(dialogue_id)})) is not None:
-            return DialogueOut(**dialogue)
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Dialogue not found"
-        )
+        entity = await cls.dialogue_repo.find_by_id(dialogue_id)
+        
+        if entity is None:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="Dialogue not found"
+            )
+        
+        return DialogueMapper.to_dto(entity)
     
     @classmethod
     async def proccess_practice_dialogue(
@@ -93,45 +93,26 @@ class DialogueBusiness:
 
     @classmethod
     async def list_practice_history(cls, filter_type: str, skip: int = 0, limit: int = 20, user: UserOut = None) -> List[DialoguePracticeHistoryOut]:
-        pipeline = [
-            {"$match": {"user_id": user.id}},
-            {
-                "$addFields": {
-                    "dialogue_id": {"$toObjectId": "$dialogue_id"}
-                }
-            },
-            {
-                "$lookup": {
-                    "from": "dialogues",
-                    "localField": "dialogue_id",
-                    "foreignField": "_id",
-                    "as": "dialogue"
-                }
-            },
-            {
-                "$addFields": {
-                    "dialogue_id": {"$toString": "$dialogue_id"},
-                    "dialogue": {"$arrayElemAt": ["$dialogue", 0]}
-                }
-            },
-            {
-                "$sort": { "completed_at": -1 } if filter_type == 'recent' else { "xp_earned": -1 }
-            },
-            {
-                "$skip": skip
-            },
-            {
-                "$limit": limit
-            }
-        ]
-        cursor = Mongo.dialogue_practice_history.aggregate(pipeline)
-        return await cursor_to_list(DialoguePracticeHistoryOut, cursor)
+        filters = {
+            "user_id": user.id,
+            "sort_field": "completed_at" if filter_type == 'recent' else "xp_earned",
+            "sort_desc": True
+        }
+        
+        entities = await cls.dialogue_practice_history_repo.find_with_filters(
+            filters, 
+            skip, 
+            limit,
+            include_dialogue=True
+        )
+        
+        return [DialoguePracticeHistoryMapper.to_dto(entity, include_dialogue=True) for entity in entities]
 
-    @staticmethod
-    async def _create_practice_history(dialogue: DialogueOut, user_id: str, result: PracticeResult) -> None:
+    @classmethod
+    async def _create_practice_history(cls, dialogue: DialogueOut, user_id: str, result: PracticeResult) -> None:
         try:
             practice_duration = sum(line.end_time - line.start_time for line in dialogue.lines)
-            practice_record = DialoguePracticeHistoryIn(
+            practice_entity = DialoguePracticeHistoryEntity(
                 dialogue_id=dialogue.id,
                 user_id=user_id,
                 pronunciation_score=result.pronunciation_score,
@@ -141,7 +122,8 @@ class DialogueBusiness:
                 character_played='',
                 xp_earned=result.xp_earned
             )
-            await Mongo.dialogue_practice_history.insert_one(practice_record.model_dump())
+
+            await cls.dialogue_practice_history_repo.create(practice_entity)
         except Exception as e:
             logger.error(f"Error saving practice history: {str(e)}")
 

@@ -1,4 +1,4 @@
-from .base import BaseModel, EmailStr, Field, Optional, List, MongoObjectId
+from app.core.common.application.dto import BaseModel, EmailStr, Field, Optional, List, MongoObjectId
 from datetime import datetime
 
 class Achievement(BaseModel):
@@ -6,7 +6,6 @@ class Achievement(BaseModel):
     name: str
     description: str
     earned_at: datetime
-
 
 class UserProgress(BaseModel):
     total_practice_time_seconds: int = 0
@@ -35,7 +34,6 @@ class UserIn(BaseModel):
 
 class UserOut(UserIn):
     id: MongoObjectId = Field(default_factory=MongoObjectId, alias="_id")
-
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None

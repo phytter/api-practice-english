@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import List
-from app.model import MovieSearchOut
+from app.core.movies.application.dto.movie_dto import MovieSearchOut
 
 class SubtitleMovies(ABC):
 

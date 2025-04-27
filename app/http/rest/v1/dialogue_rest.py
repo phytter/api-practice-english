@@ -2,7 +2,8 @@ from app.core.config import settings
 from fastapi import APIRouter, File, UploadFile, Depends
 from app.business import DialogueBusiness, AuthBusiness
 from typing import List, Optional
-from app.model import DialogueOut, PracticeResult, DialoguePracticeHistoryOut, UserOut
+from app.core.dialogues.application.dto.dialogue_dto import DialogueOut, PracticeResult, DialoguePracticeHistoryOut
+from app.core.users.application.dto.user_dto import UserOut
 
 
 dialogue_v1 = APIRouter(

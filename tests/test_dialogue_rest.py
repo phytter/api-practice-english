@@ -4,7 +4,7 @@ from unittest.mock import patch
 from httpx import AsyncClient
 from app.http.rest.v1 import dialogue_v1
 from app.integration.mongo import Mongo
-from app.model import ObjectId
+from app.core.common.application.dto import ObjectId
 import io
 from google.cloud import speech_v1
 from pydub import AudioSegment
@@ -44,7 +44,7 @@ def mock_practice_history_db(dialogue_id: str | ObjectId):
         "user_id": "user_id",
         "pronunciation_score": 0.8,
         "fluency_score": 1,
-        "completed_at": "2021-01-01T00:00:00",
+        "completed_at": "2021-01-01T00:00:00Z",
         "practice_duration_seconds": 10,
         "character_played": "",
         "xp_earned": 10
@@ -283,6 +283,7 @@ async def test_practice_dialogue_positive_return(mock_audio_transcript, client: 
     dialogue_db['lines'] = [
         { "character": "", "text": "Buzz lightyear mission log", "start_time": 0, "end_time": 2 },
     ]
+    dialogue_db['duration_seconds'] = 2
     result = await Mongo.dialogues.insert_one(dialogue_db)
     dialogue_id = result.inserted_id
 
@@ -308,6 +309,7 @@ async def test_practice_dialogue_suggestions_return(mock_audio_transcript, clien
         { "character": "", "text": "Buzz lightyear mission log", "start_time": 0, "end_time": 2 },
         { "character": "", "text": "as the location of zurg's fortress", "start_time": 2, "end_time": 4 },
     ]
+    dialogue_db['duration_seconds'] = 4
     result = await Mongo.dialogues.insert_one(dialogue_db)
     dialogue_id = result.inserted_id
 

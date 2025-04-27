@@ -2,7 +2,7 @@ from app.core.config import settings
 from fastapi import APIRouter, Depends
 from app.business import UserBusiness, AuthBusiness
 from typing import List
-from app.model import UserOut
+from app.core.users.application.dto.user_dto import UserOut
 
 
 user_v1 = APIRouter(

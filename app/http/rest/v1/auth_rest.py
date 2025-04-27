@@ -1,6 +1,6 @@
 from app.core.config import settings
 from fastapi import APIRouter
-from app.model import GoogleLoginData
+from app.core.common.application.dto import GoogleLoginData
 from app.business import AuthBusiness
 
 

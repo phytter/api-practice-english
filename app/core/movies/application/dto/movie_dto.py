@@ -1,6 +1,5 @@
-from .base import BaseModel, Field, MongoObjectId, PyObjectId
+from app.core.common.application.dto import BaseModel, Field, MongoObjectId, PyObjectId
 from datetime import datetime
-
 
 class MovieBase(BaseModel):
     title: str

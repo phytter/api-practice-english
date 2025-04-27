@@ -2,7 +2,7 @@ from typing import List
 from app.integration.http_client import HttpClient
 from app.core.config import settings
 from app.core.ports import SubtitleMovies
-from app.model import MovieSearchOut, MovieOut
+from app.core.movies.application.dto.movie_dto import MovieSearchOut, MovieOut
 from datetime import datetime
 
 class OpenSubTitles(SubtitleMovies):
@@ -10,7 +10,8 @@ class OpenSubTitles(SubtitleMovies):
     base_url: str = settings.OPENSUBTITLES_API_URL
     default_headers = {
         "Api-Key": settings.OPENSUBTITLES_API_KEY,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "User-Agent": "practice_english/1.0"
     }
 
     @classmethod

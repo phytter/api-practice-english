@@ -2,7 +2,7 @@ from typing import Any, Callable, Type
 
 import pydantic
 
-from app.model.base import MongoObjectId
+from app.core.common.application.dto import MongoObjectId
 from pydantic.v1.json import ENCODERS_BY_TYPE
 
 
