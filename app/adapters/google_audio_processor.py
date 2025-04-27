@@ -1,4 +1,4 @@
-from app.core.ports import AudioProcessor, AudioTranscriptResult
+from app.core.common.ports import AudioProcessor, AudioTranscriptResult
 from google.oauth2 import service_account
 from google.cloud import speech_v1
 
