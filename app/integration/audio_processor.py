@@ -1,5 +1,5 @@
 from app.adapters.google_audio_processor import GoogleAudioProcessor
-from app.core.ports.audio_processor import AudioProcessor as AudioProcessorPort
+from app.core.common.ports import AudioProcessor as AudioProcessorPort
 
 class AudioProcessor:
     client: AudioProcessorPort = None
