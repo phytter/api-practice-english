@@ -4,7 +4,6 @@ from datetime import datetime, timezone
 from app.core.dialogues.application.dto.dialogue_dto import DialoguePracticeHistoryIn, DialoguePracticeHistoryOut
 from app.core.dialogues.domain.dialogue_practice_history_entity import DialoguePracticeHistoryEntity
 from app.core.dialogues.application.dialogue_mapper import DialogueMapper
-from app.core.common.application.dto import MongoObjectId
 
 class DialoguePracticeHistoryMapper:
     @staticmethod
@@ -38,7 +37,7 @@ class DialoguePracticeHistoryMapper:
         }
         
         if entity.id:
-            dto_dict["_id"] = MongoObjectId(entity.id)
+            dto_dict["_id"] = entity.id.value
         
         if include_dialogue and hasattr(entity, 'dialogue') and entity.dialogue:
             dto_dict["dialogue"] = DialogueMapper.to_dto(entity.dialogue)

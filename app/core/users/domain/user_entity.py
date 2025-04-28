@@ -1,12 +1,12 @@
 from typing import List, Any, Optional
 from datetime import datetime, timezone
 from app.core.common.domain.entity import Entity
-from app.core.common.domain.value_objects import Email, Score, XpPoints
+from app.core.common.domain.value_objects import Email, Score, XpPoints, Uuid
 
 class Achievement:
     def __init__(
         self,
-        id: str,
+        id: Uuid,
         name: str,
         description: str,
         earned_at: datetime
@@ -22,7 +22,7 @@ class Achievement:
         description: str,
         earned_at: datetime
     ):
-        return Achievement(id, name, description, earned_at)
+        return Achievement(Uuid(id), name, description, earned_at)
 
 class UserProgress:
     def __init__(
@@ -105,7 +105,7 @@ class UserEntity(Entity):
         picture: str = '',
         achievements: List[Achievement] = None,
         progress: UserProgress = None,
-        id: str = None
+        id: Uuid = None
     ):
         self.id = id
         self.email = email
@@ -138,9 +138,9 @@ class UserEntity(Entity):
             picture=picture,
             achievements=achievements,
             progress=progress or UserProgress(),
-            id=id
+            id=Uuid(id)
         )
-    
+
     def update_progress(self, pronunciation_score: float, fluency_score: float, xp_earned: int) -> Optional[Achievement]:
         """Update user progress and return a new achievement if earned"""
         old_level = self.progress.level
@@ -157,7 +157,6 @@ class UserEntity(Entity):
     def _create_level_up_achievement(self, level: int) -> Achievement:
         """Create an achievement for leveling up"""
         return Achievement.create(
-            id=f"level_{level}",
             name=f"Level {level} Achieved",
             description=f"Congratulations! You've reached level {level}.",
             earned_at=datetime.now(timezone.utc)
@@ -172,7 +171,7 @@ class UserEntity(Entity):
             "google_id": self.google_id,
             "achievements": [
                 {
-                    "id": achievement.id,
+                    "id": str(achievement.id),
                     "name": achievement.name,
                     "description": achievement.description,
                     "earned_at": achievement.earned_at

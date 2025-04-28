@@ -1,7 +1,7 @@
 from typing import Any
 from datetime import datetime, timezone
 from app.core.common.domain.entity import Entity
-from app.core.common.domain.value_objects import Score, XpPoints
+from app.core.common.domain.value_objects import Score, XpPoints, Uuid
 
 class DialoguePracticeHistoryEntity(Entity):
     def __init__(
@@ -14,7 +14,7 @@ class DialoguePracticeHistoryEntity(Entity):
         practice_duration_seconds: float,
         character_played: str = '',
         xp_earned: XpPoints = XpPoints(0),
-        id: str = None
+        id: Uuid = None
     ):
         self.id = id
         self.dialogue_id = dialogue_id
@@ -47,7 +47,7 @@ class DialoguePracticeHistoryEntity(Entity):
             practice_duration_seconds=practice_duration_seconds,
             character_played=character_played,
             xp_earned=XpPoints(xp_earned),
-            id=id
+            id=Uuid(id)
         )
     
     

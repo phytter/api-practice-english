@@ -1,6 +1,7 @@
 from typing import Any, Dict
 from datetime import datetime
 from app.core.common.domain.entity import Entity
+from app.core.common.domain.value_objects import Uuid
 
 class MovieEntity(Entity):
     def __init__(
@@ -16,7 +17,7 @@ class MovieEntity(Entity):
         language: str = "en",
         machine_translated: bool = False,
         ai_translated: bool = False,
-        id: str = None
+        id: Uuid = None
     ):
         self.id = id
         self.title = title
@@ -31,6 +32,35 @@ class MovieEntity(Entity):
         self.machine_translated = machine_translated
         self.ai_translated = ai_translated
         self._validate()
+
+    def create(
+        title: str,
+        year: int,
+        feature_type: str,
+        imdb_id: str,
+        subtitle_id: str,
+        all_movie_info: Dict[str, Any],
+        upload_date: datetime,
+        content: str,
+        language: str = "en",
+        machine_translated: bool = False,
+        ai_translated: bool = False,
+        id: str = None
+    ):
+        return MovieEntity(
+            title=title,
+            year=year,
+            feature_type=feature_type,
+            imdb_id=imdb_id,
+            subtitle_id=subtitle_id,
+            all_movie_info=all_movie_info,
+            upload_date=upload_date,
+            content=content,
+            language=language,
+            machine_translated=machine_translated,
+            ai_translated=ai_translated,
+            id=Uuid(id)
+        )
     
     def _validate(self) -> None:
         self._validate_imdb_id()

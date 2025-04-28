@@ -2,7 +2,6 @@ from typing import Dict, Any
 from datetime import timezone
 from app.core.users.application.dto.user_dto import UserIn, UserOut, UserProgress as UserProgressDTO, Achievement as AchievementDTO
 from app.core.users.domain import UserEntity, UserProgress, Achievement
-from app.core.common.application.dto import MongoObjectId
 
 def ensure_timezone_aware(dt):
     """Ensure a datetime is timezone-aware, adding UTC if needed"""
@@ -52,7 +51,7 @@ class UserMapper:
         achievements = []
         for ach in entity.achievements:
             achievements.append(AchievementDTO(
-                id=ach.id,
+                id=str(ach.id),
                 name=ach.name,
                 description=ach.description,
                 earned_at=ach.earned_at
@@ -79,7 +78,7 @@ class UserMapper:
         }
         
         if entity.id:
-            user_dict["_id"] = MongoObjectId(entity.id)
+            user_dict["_id"] = entity.id.value
             
         return UserOut(**user_dict)
     

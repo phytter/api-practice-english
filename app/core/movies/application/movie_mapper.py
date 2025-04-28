@@ -2,14 +2,12 @@ from typing import Dict, Any
 from dateutil import parser
 from app.core.movies.application.dto.movie_dto import MovieIn, MovieOut
 from app.core.movies.domain import MovieEntity
-from app.core.common.application.dto import MongoObjectId
-
 class MovieMapper:
     @staticmethod
     def to_entity(movie_dto: MovieIn) -> MovieEntity:
         """Convert DTO to entity"""
 
-        return MovieEntity(
+        return MovieEntity.create(
             id=str(movie_dto.id) if movie_dto.id else None,
             title=movie_dto.title,
             year=movie_dto.year,
@@ -42,7 +40,7 @@ class MovieMapper:
         }
         
         if entity.id:
-            movie_dict["_id"] = MongoObjectId(entity.id)
+            movie_dict["_id"] = entity.id.value
             
         return MovieOut(**movie_dict)
     
@@ -50,7 +48,7 @@ class MovieMapper:
     def from_document_to_entity(doc: Dict[str, Any]) -> MovieEntity:
         """Convert MongoDB document directly to entity"""
         
-        return MovieEntity(
+        return MovieEntity.create(
             id=str(doc["_id"]),
             title=doc["title"],
             year=doc["year"],

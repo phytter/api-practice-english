@@ -51,7 +51,7 @@ class AuthBusiness:
             else:
                 # Update last login
                 user_entity.last_login = datetime.now(timezone.utc)
-                await cls.user_repo.update(user_entity.id, user_entity)
+                await cls.user_repo.update(user_entity.id.value, user_entity)
 
             user_entity = await cls.user_repo.find_by_google_id(google_id)
             user_dto = UserMapper.to_dto(user_entity)
