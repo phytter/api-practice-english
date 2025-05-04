@@ -1,5 +1,6 @@
 from typing import List, Any, Optional
 from app.core.common.domain.entity import Entity
+from app.core.common.domain.value_objects import Uuid
 
 class DialogueLine:
     def __init__(self, character: str, text: str, start_time: float, end_time: float):
@@ -28,7 +29,7 @@ class DialogueEntity(Entity):
         duration_seconds: float,
         lines: List[DialogueLine],
         movie: Optional[DialogueMovie] = None,
-        id: str = None
+        id: Uuid = None
     ):
         self.id = id
         self.movie = movie
@@ -36,6 +37,15 @@ class DialogueEntity(Entity):
         self.duration_seconds = duration_seconds
         self.lines = lines
         self._validate()
+
+    def create(
+        difficulty_level: int,
+        duration_seconds: float,
+        lines: List[DialogueLine],
+        movie: Optional[DialogueMovie] = None,
+        id: str = None
+    ):
+        return DialogueEntity(difficulty_level, duration_seconds, lines, movie, Uuid(id))
     
     def _validate(self) -> None:
         self._validate_difficulty_level()

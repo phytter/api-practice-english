@@ -1,19 +1,20 @@
 from typing import Any
 from datetime import datetime, timezone
 from app.core.common.domain.entity import Entity
+from app.core.common.domain.value_objects import Score, XpPoints, Uuid
 
 class DialoguePracticeHistoryEntity(Entity):
     def __init__(
         self,
         dialogue_id: str,
         user_id: str,
-        pronunciation_score: float,
-        fluency_score: float,
+        pronunciation_score: Score,
+        fluency_score: Score,
         completed_at: datetime,
         practice_duration_seconds: float,
         character_played: str = '',
-        xp_earned: int = 0,
-        id: str = None
+        xp_earned: XpPoints = XpPoints(0),
+        id: Uuid = None
     ):
         self.id = id
         self.dialogue_id = dialogue_id
@@ -25,17 +26,34 @@ class DialoguePracticeHistoryEntity(Entity):
         self.character_played = character_played
         self.xp_earned = xp_earned
         self._validate()
+
+    def create(
+        dialogue_id: str,
+        user_id: str,
+        pronunciation_score: float,
+        fluency_score: float,
+        completed_at: datetime, 
+        practice_duration_seconds: float,
+        character_played: str,
+        xp_earned: int,
+        id: str = None
+    ):
+        return DialoguePracticeHistoryEntity(
+            dialogue_id=dialogue_id,
+            user_id=user_id,
+            pronunciation_score=Score(pronunciation_score),
+            fluency_score=Score(fluency_score),
+            completed_at=completed_at,
+            practice_duration_seconds=practice_duration_seconds,
+            character_played=character_played,
+            xp_earned=XpPoints(xp_earned),
+            id=Uuid(id)
+        )
+    
     
     def _validate(self) -> None:
-        self._validate_scores()
         self._validate_duration()
         self._validate_completed_at()
-    
-    def _validate_scores(self) -> None:
-        if not 0 <= self.pronunciation_score <= 1:
-            raise ValueError("Pronunciation score must be between 0 and 1")
-        if not 0 <= self.fluency_score <= 1:
-            raise ValueError("Fluency score must be between 0 and 1")
     
     def _validate_duration(self) -> None:
         if self.practice_duration_seconds <= 0:
@@ -51,10 +69,10 @@ class DialoguePracticeHistoryEntity(Entity):
         return {
             "dialogue_id": self.dialogue_id,
             "user_id": self.user_id,
-            "pronunciation_score": self.pronunciation_score,
-            "fluency_score": self.fluency_score,
+            "pronunciation_score": self.pronunciation_score.value,
+            "fluency_score": self.fluency_score.value,
             "completed_at": self.completed_at,
             "practice_duration_seconds": self.practice_duration_seconds,
             "character_played": self.character_played,
-            "xp_earned": self.xp_earned
+            "xp_earned": self.xp_earned.value
         }

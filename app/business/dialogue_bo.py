@@ -112,7 +112,7 @@ class DialogueBusiness:
     async def _create_practice_history(cls, dialogue: DialogueOut, user_id: str, result: PracticeResult) -> None:
         try:
             practice_duration = sum(line.end_time - line.start_time for line in dialogue.lines)
-            practice_entity = DialoguePracticeHistoryEntity(
+            practice_entity = DialoguePracticeHistoryEntity.create(
                 dialogue_id=dialogue.id,
                 user_id=user_id,
                 pronunciation_score=result.pronunciation_score,

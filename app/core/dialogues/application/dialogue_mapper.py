@@ -1,7 +1,6 @@
 from typing import Dict, Any
 from app.core.dialogues.application.dto.dialogue_dto import DialogueIn, DialogueOut
 from app.core.dialogues.domain.dialogue_entity import DialogueEntity, DialogueLine, DialogueMovie
-from app.core.common.application.dto import MongoObjectId
 
 class DialogueMapper:
     @staticmethod
@@ -24,7 +23,7 @@ class DialogueMapper:
             ) for line in dialogue_dto.lines
         ]
         
-        return DialogueEntity(
+        return DialogueEntity.create(
             difficulty_level=dialogue_dto.difficulty_level,
             duration_seconds=dialogue_dto.duration_seconds,
             lines=lines,
@@ -56,7 +55,7 @@ class DialogueMapper:
             }
         
         if entity.id:
-            dto_dict["_id"] = MongoObjectId(entity.id)
+            dto_dict["_id"] = entity.id.value
             
         return DialogueOut(**dto_dict)
     
@@ -82,7 +81,7 @@ class DialogueMapper:
                 end_time=line_data["end_time"]
             ))
         
-        return DialogueEntity(
+        return DialogueEntity.create(
             id=str(doc["_id"]),
             movie=movie,
             difficulty_level=doc["difficulty_level"],

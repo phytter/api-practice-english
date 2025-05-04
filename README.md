@@ -10,35 +10,6 @@ This application is an interactive tool to practice and improve your English ski
 - **Practice Dialogues**: Submit audio recordings to receive feedback on your pronunciation and fluency.
 - **Practice History**: Track your progress and view your practice history.
 
-## Next Steps
-
-1. Complete DDD Implementation:
-- Introduce proper Value Objects for concepts like email, score ranges
-- Implement Domain Events for important state changes (level up, achievement unlocked)
-- Define Aggregates with clear boundaries and invariants
-2. Improve Error Handling:
-- Create domain-specific exceptions
-- Implement a consistent error handling strategy across layers
-3. Implement CQRS Pattern:
-- Separate command (write) and query (read) responsibilities
-- Optimize read models for UI requirements
-4. Add Comprehensive Testing:
-- Unit tests for domain logic and validation rules
-- Integration tests for repositories
-5. Implement Domain Services:
-- Move complex business logic that doesn't belong in entities to domain services
-6. Performance Optimizations:
-- Add caching for frequently accessed data
-- Optimize MongoDB queries with proper indexes
-- Consider read/write separation for scaling
-7. Documentation Improvements:
-- Document domain model with diagrams
-- Add comprehensive API documentation
-- Document architectural decisions
-8. Refactor Remaining Business Logic:
-- Move all domain logic from business layer to domain entities/services
-- Ensure business layer only orchestrates domain operations
-
 ## Prerequisites
 
 Before you begin, make sure you have the following installed:
@@ -96,10 +67,30 @@ pytest
 
 ## Next Steps
 
-- Apply repository pattern
-- Apply DDD
-- Apply Clean Architectue
-- Apply some SOLID principles
+1. Complete DDD Implementation:
+- Introduce proper Value Objects for concepts like email, score ranges ✅
+- Implement Domain Events for important state changes (level up, achievement unlocked)
+- Define Aggregates with clear boundaries and invariants
+2. Improve Error Handling:
+- Create domain-specific exceptions
+- Implement a consistent error handling strategy across layers
+3. Implement CQRS Pattern:
+- Separate command (write) and query (read) responsibilities
+- Optimize read models for UI requirements
+4. Implement Domain Services:
+- Move complex business logic that doesn't belong in entities to domain services
+- Ensure business layer only orchestrates domain operations
+5. Performance Optimizations:
+- Add caching for frequently accessed data
+- Optimize MongoDB queries with proper indexes
+- Implement async dialog processing with microsservices
+6. Add Comprehensive Testing:
+- Unit tests for domain logic and validation rules
+- Integration tests for repositories
+7. Documentation Improvements:
+- Document domain model with diagrams
+- Add comprehensive API documentation
+- Document architectural decisions
 
 ## Contributing
 
