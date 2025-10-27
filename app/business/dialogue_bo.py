@@ -88,6 +88,9 @@ class DialogueBusiness:
 
         await cls._create_practice_history(dialogue, user.id, result)
         await UserBusiness.update_progress(user.id, result)
+        
+        # Publish dialogue-related domain events only
+        await cls._publish_practice_events(dialogue, user.id, result)
 
         return result
 
@@ -203,3 +206,34 @@ class DialogueBusiness:
         base_xp = difficulty * 100
         performance_multiplier = (pronunciation_score + fluency_score) / 2
         return int(base_xp * performance_multiplier)
+    
+    @classmethod
+    async def _publish_practice_events(
+        cls,
+        dialogue: DialogueOut,
+        user_id: str,
+        result: PracticeResult
+    ) -> None:
+        """Publish dialogue-related domain events"""
+        from app.core.common.domain.events.event_dispatcher import event_dispatcher
+        from app.core.dialogues.domain.events.practice_completed_event import PracticeCompletedEvent
+        from app.core.common.domain.value_objects import Uuid, Score, XpPoints
+        
+        try:
+            # Create and publish practice completed event
+            practice_duration = sum(line.end_time - line.start_time for line in dialogue.lines)
+            practice_event = PracticeCompletedEvent(
+                user_id=Uuid(user_id),
+                dialogue_id=Uuid(dialogue.id),
+                pronunciation_score=Score(result.pronunciation_score),
+                fluency_score=Score(result.fluency_score),
+                xp_earned=XpPoints(result.xp_earned),
+                practice_duration_seconds=practice_duration,
+                difficulty_level=dialogue.difficulty_level,
+                character_played=""
+            )
+            
+            await event_dispatcher.publish(practice_event)
+            
+        except Exception as e:
+            logger.error(f"Error publishing practice domain events: {str(e)}")

@@ -11,6 +11,7 @@ from app.config import (
     stop_audio_processor
 )
 from contextlib import asynccontextmanager
+from app.core.common.domain.events.event_setup import setup_event_handlers
 
 from .rest.v1 import (
    health_v1,
@@ -36,6 +37,7 @@ async def startup_event():
     await start_mongo()
     await start_http_client()
     start_audio_processor()
+    setup_event_handlers()
 
 async def shutdown_event():
     await stop_mongo()

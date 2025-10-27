@@ -107,6 +107,7 @@ class UserEntity(Entity):
         progress: UserProgress = None,
         id: Uuid = None
     ):
+        super().__init__()
         self.id = id
         self.email = email
         self.name = name
@@ -141,18 +142,23 @@ class UserEntity(Entity):
             id=Uuid(id)
         )
 
-    def update_progress(self, pronunciation_score: float, fluency_score: float, xp_earned: int) -> Optional[Achievement]:
-        """Update user progress and return a new achievement if earned"""
+    def update_progress(self, pronunciation_score: float, fluency_score: float, xp_earned: int) -> None:
+        """Update user progress and raise domain events for level changes"""
         old_level = self.progress.level
         
         self.progress.update_with_practice_result(pronunciation_score, fluency_score, xp_earned)
         
-        if self.progress.level > old_level and self.progress.level % 2 == 0:
-            achievement = self._create_level_up_achievement(self.progress.level)
-            self.achievements.append(achievement)
-            return achievement
-        
-        return None
+        if self.progress.level > old_level:
+            # Import here to avoid circular imports
+            from app.core.users.domain.events.user_leveled_up_event import UserLeveledUpEvent
+            
+            event = UserLeveledUpEvent(
+                user_id=self.id,
+                old_level=old_level,
+                new_level=self.progress.level,
+                total_xp=self.progress.xp_points
+            )
+            self.raise_event(event)
     
     def _create_level_up_achievement(self, level: int) -> Achievement:
         """Create an achievement for leveling up"""
