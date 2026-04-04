@@ -34,6 +34,7 @@ class UserIn(BaseModel):
 
 class UserOut(UserIn):
     id: MongoObjectId = Field(default_factory=MongoObjectId, alias="_id")
+    model_config = {"populate_by_name": True}
 
 class UserUpdate(BaseModel):
     name: Optional[str] = None

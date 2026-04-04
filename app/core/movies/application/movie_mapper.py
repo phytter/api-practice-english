@@ -1,5 +1,6 @@
 from typing import Dict, Any
 from dateutil import parser
+from datetime import datetime
 from app.core.movies.application.dto.movie_dto import MovieIn, MovieOut
 from app.core.movies.domain import MovieEntity
 class MovieMapper:
@@ -56,7 +57,7 @@ class MovieMapper:
             imdb_id=doc["imdb_id"],
             subtitle_id=doc["subtitle_id"],
             all_movie_info=doc["all_movie_info"],
-            upload_date=parser.parse(doc["upload_date"]),
+            upload_date=doc["upload_date"] if isinstance(doc["upload_date"], datetime) else parser.parse(doc["upload_date"]),
             content=doc["content"],
             language=doc.get("language", "en"),
             machine_translated=doc.get("machine_translated", False),

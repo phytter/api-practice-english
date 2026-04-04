@@ -9,15 +9,8 @@ from datetime import datetime, timezone
 BASE_URL = auth_v1.prefix
 TEST_USER_EMAIL = "test@example.com"
 pytestmark = [
-    pytest.mark.asyncio,
-    pytest.mark.usefixtures("wipe_auth")
+    pytest.mark.asyncio
 ]
-
-
-@pytest_asyncio.fixture
-async def wipe_auth():
-    from app.integration import Mongo
-    await Mongo.users.delete_many({})
 
 @pytest.fixture
 def google_login_data():

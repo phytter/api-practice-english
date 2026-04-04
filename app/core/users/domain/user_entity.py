@@ -152,13 +152,15 @@ class UserEntity(Entity):
             # Import here to avoid circular imports
             from app.core.users.domain.events.user_leveled_up_event import UserLeveledUpEvent
             
-            event = UserLeveledUpEvent(
-                user_id=self.id,
-                old_level=old_level,
-                new_level=self.progress.level,
-                total_xp=self.progress.xp_points
-            )
-            self.raise_event(event)
+            # Raise an event for each level gained
+            for level in range(old_level + 1, self.progress.level + 1):
+                event = UserLeveledUpEvent(
+                    user_id=self.id,
+                    old_level=level - 1,
+                    new_level=level,
+                    total_xp=self.progress.xp_points
+                )
+                self.raise_event(event)
     
     def _create_level_up_achievement(self, level: int) -> Achievement:
         """Create an achievement for leveling up"""

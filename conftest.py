@@ -45,6 +45,19 @@ def event_loop():
     yield loop
     loop.close()
 
+@pytest_asyncio.fixture(autouse=True)
+async def clean_database():
+    # Runs the cleanup AFTER the test finishes
+    yield
+    from app.integration import Mongo
+    if Mongo.users is not None:
+        print("\n[CLEANING DB] Deleting all test records...")
+        await Mongo.users.delete_many({})
+        await Mongo.movies_processed.delete_many({})
+        await Mongo.dialogues.delete_many({})
+        await Mongo.dialogue_practice_history.delete_many({})
+        count = await Mongo.users.count_documents({})
+        print(f"[CLEANING DB] Users left: {count}")
     
 @pytest_asyncio.fixture
 @patch("google.oauth2.id_token.verify_oauth2_token")
@@ -52,11 +65,12 @@ async def mock_user_google_auth(
     mock_verify,
     client: AsyncClient
 ):
+    import uuid
     mock_verify.return_value = {
-        "email": "user@example.com",
+        "email": "test@example.com",
         "name": "Test User",
         "picture": "http://example.com/picture.jpg",
-        "sub": "1234567890",
+        "sub": str(uuid.uuid4()),
         "iss": "accounts.google.com"
     }
 
