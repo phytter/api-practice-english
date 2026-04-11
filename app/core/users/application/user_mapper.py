@@ -78,7 +78,8 @@ class UserMapper:
         }
         
         if entity.id:
-            user_dict["_id"] = entity.id.value
+            user_dict["_id"] = str(entity.id.value)
+            user_dict["id"] = str(entity.id.value)
             
         return UserOut(**user_dict)
     
