@@ -3,7 +3,8 @@ from typing import Optional
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from fastapi import HTTPException, status, Depends, Request
-from jose import JWTError, jwt
+import jwt
+from jwt.exceptions import InvalidTokenError
 from fastapi.security import OAuth2AuthorizationCodeBearer
 
 from app.core.common.application.dto import GoogleLoginData
@@ -114,7 +115,7 @@ class AuthBusiness:
             user_id: str | None = payload.get("sub")
             if user_id is None:
                 raise credentials_exception
-        except JWTError:
+        except InvalidTokenError:
             raise credentials_exception     
 
         user_entity = await cls.user_repo.find_by_id(user_id)
