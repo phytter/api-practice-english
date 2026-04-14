@@ -3,3 +3,4 @@ __pycache__/
 .env*
 !.env.example
 google_credentials.json
+.claude/settings.json
