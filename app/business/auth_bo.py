@@ -7,7 +7,7 @@ import jwt
 from jwt.exceptions import InvalidTokenError
 from fastapi.security import OAuth2AuthorizationCodeBearer
 
-from app.core.common.application.dto import GoogleLoginData
+from app.core.common.application.dto import GoogleLoginData, DevLoginData
 from app.core.users.application.dto.user_dto import UserOut
 from app.core.config import settings
 from app.core.users.infra.database.repositories import UserMongoRepository
@@ -70,6 +70,33 @@ class AuthBusiness:
                 detail="Invalid token"
             )
   
+    @classmethod
+    async def dev_login_service(cls, data: DevLoginData):
+        results = await cls.user_repo.find_with_filters({"email": data.email}, limit=1)
+        user_entity = results[0] if results else None
+
+        if not user_entity:
+            user_entity = UserEntity.create(
+                email=data.email,
+                name=data.name,
+                picture="",
+                google_id="",
+                achievements=[],
+                created_at=datetime.now(timezone.utc),
+                last_login=datetime.now(timezone.utc),
+                progress=UserProgress()
+            )
+            await cls.user_repo.create(user_entity)
+            results = await cls.user_repo.find_with_filters({"email": data.email}, limit=1)
+            user_entity = results[0]
+        else:
+            user_entity.last_login = datetime.now(timezone.utc)
+            await cls.user_repo.update(user_entity.id.value, user_entity)
+
+        user_dto = UserMapper.to_dto(user_entity)
+        access_token = cls.create_access_token(data={"sub": str(user_dto.id)})
+        return {"access_token": access_token, "token_type": "bearer", "user": user_dto}
+
     @staticmethod
     def create_access_token(data: dict, expires_delta: Optional[timedelta] = None):
         to_encode = data.copy()
