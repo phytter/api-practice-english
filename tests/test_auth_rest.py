@@ -88,3 +88,45 @@ async def test_google_login_success_exist_user(
     
     assert result["user"]["email"] == TEST_USER_EMAIL
     assert result["user"]["last_login"] != result["user"]["created_at"]
+
+async def test_dev_login_success_new_user(client: AsyncClient):
+    from app.core.config import settings
+    with patch.object(settings, "APP_DEBUG", True):
+        response = await client.post(
+            f"{BASE_URL}/dev-login",
+            json={"email": "dev@local.com", "name": "Dev User"},
+        )
+
+    assert response.status_code == 200
+    result = response.json()
+    assert "access_token" in result
+    assert result["token_type"] == "bearer"
+    assert result["user"]["email"] == "dev@local.com"
+    assert result["user"]["name"] == "Dev User"
+
+async def test_dev_login_success_existing_user(client: AsyncClient):
+    from app.core.config import settings
+    with patch.object(settings, "APP_DEBUG", True):
+        await client.post(
+            f"{BASE_URL}/dev-login",
+            json={"email": "dev@local.com", "name": "Dev User"},
+        )
+        response = await client.post(
+            f"{BASE_URL}/dev-login",
+            json={"email": "dev@local.com", "name": "Dev User"},
+        )
+
+    assert response.status_code == 200
+    result = response.json()
+    assert result["user"]["email"] == "dev@local.com"
+    assert result["user"]["last_login"] != result["user"]["created_at"]
+
+async def test_dev_login_forbidden_when_not_debug(client: AsyncClient):
+    from app.core.config import settings
+    with patch.object(settings, "APP_DEBUG", False):
+        response = await client.post(
+            f"{BASE_URL}/dev-login",
+            json={"email": "dev@local.com", "name": "Dev User"},
+        )
+
+    assert response.status_code == 403
