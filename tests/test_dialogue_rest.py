@@ -60,21 +60,25 @@ def mock_google_speech_good_result(transcript=""):
                     words = [
                         speech_v1.WordInfo(
                             word = "Buzz",
+                            confidence = 0.8,
                             start_time = {"seconds": 0, "nanos": 0},
                             end_time = {"seconds": 0, "nanos": 500000000},
                         ),
                         speech_v1.WordInfo(
                             word = "lightyear",
+                            confidence = 0.8,
                             start_time = {"seconds": 0, "nanos": 500000000},
                             end_time = {"seconds": 1, "nanos": 0},
                         ),
                         speech_v1.WordInfo(
                             word = "mission",
+                            confidence = 0.8,
                             start_time = {"seconds": 1, "nanos": 0},
                             end_time = {"seconds": 1, "nanos": 500000000},
                         ),
                         speech_v1.WordInfo(
                             word = "log",
+                            confidence = 0.8,
                             start_time = {"seconds": 1, "nanos": 500000000},
                             end_time = {"seconds": 2, "nanos": 0},
                         )
@@ -94,51 +98,61 @@ def mock_google_speech_bad_result(transcript=""):
                     words = [
                         speech_v1.WordInfo(
                             word = "Buzz",
+                            confidence = 0.58,
                             start_time = {"seconds": 0, "nanos": 0},
                             end_time = {"seconds": 0, "nanos": 500000000},
                         ),
                         speech_v1.WordInfo(
                             word = "lightyear",
+                            confidence = 0.58,
                             start_time = {"seconds": 2, "nanos": 500000000},
                             end_time = {"seconds": 2, "nanos": 0},
                         ),
                         speech_v1.WordInfo(
                             word = "mission",
+                            confidence = 0.58,
                             start_time = {"seconds": 2, "nanos": 500000000},
                             end_time = {"seconds": 3, "nanos": 500000000},
                         ),
                         speech_v1.WordInfo(
                             word = "log",
+                            confidence = 0.58,
                             start_time = {"seconds": 4, "nanos": 500000000},
                             end_time = {"seconds": 4, "nanos": 0},
                         ),
                         speech_v1.WordInfo(
                             word = "as",
+                            confidence = 0.58,
                             start_time = {"seconds": 5, "nanos": 0},
                             end_time = {"seconds": 5, "nanos": 500000000},
                         ),
                         speech_v1.WordInfo(
                             word = "the",
+                            confidence = 0.58,
                             start_time = {"seconds": 6, "nanos": 500000000},
                             end_time = {"seconds": 6, "nanos": 0},
                         ),
                         speech_v1.WordInfo(
                             word = "location",
+                            confidence = 0.58,
                             start_time = {"seconds": 8, "nanos": 0},
                             end_time = {"seconds": 9, "nanos": 500000000},
                         ),
                         speech_v1.WordInfo(
                             word = "of",
+                            confidence = 0.58,
                             start_time = {"seconds": 9, "nanos": 500000000},
                             end_time = {"seconds": 9, "nanos": 0},
                         ),
                         speech_v1.WordInfo(
                             word = "zurg",
+                            confidence = 0.58,
                             start_time = {"seconds": 11, "nanos": 0},
                             end_time = {"seconds": 12, "nanos": 500000000},
                         ),
                         speech_v1.WordInfo(
                             word = "fortress",
+                            confidence = 0.58,
                             start_time = {"seconds": 12, "nanos": 500000000},
                             end_time = {"seconds": 13, "nanos": 0},
                         )
@@ -292,10 +306,10 @@ async def test_practice_dialogue_positive_return(mock_audio_transcript, client: 
     result_json = res.json()
 
     assert res.status_code == 200
-    assert result_json['pronunciation_score'] == 0.8
+    assert result_json['pronunciation_score'] == 0.92
     assert result_json['fluency_score'] == 1
     assert result_json['transcribed_text'] == "buzz lightyear mission log"
-    assert result_json['xp_earned'] == 180
+    assert result_json['xp_earned'] == 192
     assert len(result_json['suggestions']) == 0
     assert len(result_json['word_timings']) == 4
 
@@ -318,11 +332,11 @@ async def test_practice_dialogue_suggestions_return(mock_audio_transcript, clien
     result_json = res.json()
 
     assert res.status_code == 200
-    assert result_json['pronunciation_score'] == 0.58
-    assert result_json['fluency_score'] == 0.2692
-    assert result_json['xp_earned'] == 84
+    assert result_json['pronunciation_score'] == 0.592
+    assert result_json['fluency_score'] == 0.2808
+    assert result_json['xp_earned'] == 87
     assert result_json['transcribed_text'] == transcribed_text
-    assert len(result_json['suggestions']) == 5
+    assert len(result_json['suggestions']) == 6
     assert len(result_json['word_timings']) == 10
 
 async def test_list_practice_history(client: AsyncClient, mock_auth_user_and_header):

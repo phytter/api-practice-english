@@ -1,3 +1,5 @@
+import difflib
+import re
 from typing import List
 from datetime import datetime, timezone
 import logging
@@ -16,6 +18,7 @@ class DialogueBusiness:
     PAUSE_WORD_THRESHOLD_SECONDS = 0.1
     PRONUNCIATION_THRESHOLD = 0.8
     FLUENCY_THRESHOLD = 0.7
+    WORD_ACCURACY_THRESHOLD = 0.6
     dialogue_repo = DialogueMongoRepository()
     dialogue_practice_history_repo = DialoguePracticeHistoryMongoRepository()
 
@@ -63,13 +66,22 @@ class DialogueBusiness:
         word_scores = [word_score.get('confidence', 0) for word_score in transcription_result.words]
         full_dialogue_text = " ".join(line.text for line in dialogue.lines)
 
-        pronunciation_score = round(sum(word_scores) / len(word_scores), 4) if word_scores else 0.0
-        fluency_score = cls._calculate_fluency_score(transcription_result.words)
+        avg_confidence = round(sum(word_scores) / len(word_scores), 4) if word_scores else 0.0
+        word_accuracy = cls._calculate_word_accuracy(transcription_result.transcribed_text, full_dialogue_text)
+        pronunciation_score = round(0.6 * word_accuracy + 0.4 * avg_confidence, 4)
+
+        expected_word_count = len(cls._normalize_words(full_dialogue_text))
+        fluency_score = cls._calculate_fluency_score(
+            transcription_result.words,
+            dialogue.duration_seconds,
+            expected_word_count,
+        )
         suggestions = cls._generate_suggestions(
             pronunciation_score,
             fluency_score,
+            word_accuracy,
             transcription_result.transcribed_text,
-            full_dialogue_text
+            full_dialogue_text,
         )
         xp_earned = cls._calculate_xp(
             pronunciation_score,
@@ -131,72 +143,97 @@ class DialogueBusiness:
             logger.error(f"Error saving practice history: {str(e)}")
 
     @staticmethod
-    def _calculate_fluency_score(word_timings: list) -> float:
-        # TODO: Implement more sophisticated fluency scoring
-        """
-        Calculate fluency score based on word timing and pauses
-        """
+    def _calculate_fluency_score(word_timings: list, expected_duration: float, expected_word_count: int) -> float:
         if not word_timings:
             return 0.0
 
-        total_pause_time = 0
-        total_speaking_time = 0
+        total_pause_time = 0.0
+        total_speaking_time = 0.0
         previous_end = word_timings[0]["start_time"]
 
         for timing in word_timings:
             pause_duration = timing["start_time"] - previous_end
             if pause_duration > DialogueBusiness.PAUSE_WORD_THRESHOLD_SECONDS:
                 total_pause_time += pause_duration
-            total_speaking_time += (timing["end_time"] - timing["start_time"])
+            total_speaking_time += timing["end_time"] - timing["start_time"]
             previous_end = timing["end_time"]
 
-        # Calculate fluency score based on pause ratio
         total_time = total_speaking_time + total_pause_time
         if total_time == 0:
             return 0.0
 
-        pause_ratio = total_pause_time / total_time
-        # Convert to a score between 0 and 1 (lower pause ratio = higher score)
-        fluency_score = max(0, min(1, 1 - pause_ratio))
-        return round(fluency_score, 4)
+        pause_score = max(0.0, min(1.0, 1.0 - total_pause_time / total_time))
+
+        rate_score = 1.0
+        actual_duration = word_timings[-1]["end_time"] - word_timings[0]["start_time"]
+        if expected_duration > 0 and expected_word_count > 0 and actual_duration > 0:
+            expected_wps = expected_word_count / expected_duration
+            actual_wps = len(word_timings) / actual_duration
+            rate_deviation = abs(actual_wps - expected_wps) / expected_wps
+            rate_score = max(0.0, min(1.0, 1.0 - rate_deviation))
+
+        return round(0.7 * pause_score + 0.3 * rate_score, 4)
 
     @staticmethod
-    def _generate_suggestions(pronunciation_score: float,
-                            fluency_score: float,
-                            transcribed_text: str,
-                            expected_text: str) -> list:
-        """
-        Generate improvement suggestions based on scores and text comparison
-        """
+    def _generate_suggestions(
+        pronunciation_score: float,
+        fluency_score: float,
+        word_accuracy: float,
+        transcribed_text: str,
+        expected_text: str,
+    ) -> list:
         suggestions = []
 
-        if pronunciation_score < DialogueBusiness.PRONUNCIATION_THRESHOLD:
+        if word_accuracy < DialogueBusiness.WORD_ACCURACY_THRESHOLD:
+            suggestions.append({
+                "type": "accuracy",
+                "message": "Focus on saying the correct words — try reading the dialogue aloud before recording",
+            })
+        elif pronunciation_score < DialogueBusiness.PRONUNCIATION_THRESHOLD:
             suggestions.append({
                 "type": "pronunciation",
-                "message": "Try to speak more clearly and enunciate each word"
+                "message": "Try to speak more clearly and enunciate each word",
             })
 
         if fluency_score < DialogueBusiness.FLUENCY_THRESHOLD:
             suggestions.append({
                 "type": "fluency",
-                "message": "Try to maintain a more consistent speaking pace with fewer pauses"
+                "message": "Try to maintain a more consistent speaking pace with fewer pauses",
             })
 
-        # Simple comparison transcribed_text with expected_text and provide specific suggestions
-        transcribed_words = transcribed_text.split()
-        expected_words = expected_text.split()
-        max_specific_suggestions = 5
+        transcribed_words = DialogueBusiness._normalize_words(transcribed_text)
+        expected_words = DialogueBusiness._normalize_words(expected_text)
 
-        for i, expected_word in enumerate(expected_words):
-            if len(suggestions) >= max_specific_suggestions:
+        if not expected_words:
+            return suggestions
+
+        matcher = difflib.SequenceMatcher(None, expected_words, transcribed_words)
+        specific_count = 0
+
+        for tag, i1, i2, j1, j2 in matcher.get_opcodes():
+            if specific_count >= 5:
                 break
-            if i < len(transcribed_words):
-                transcribed_word = transcribed_words[i]
-                if transcribed_word.lower() != expected_word.lower():
+            if tag == 'replace':
+                exp_slice = expected_words[i1:i2]
+                got_slice = transcribed_words[j1:j2]
+                for k, exp_word in enumerate(exp_slice):
+                    if specific_count >= 5:
+                        break
+                    got_word = got_slice[k] if k < len(got_slice) else '[inaudible]'
                     suggestions.append({
                         "type": "specific",
-                        "message": f"Expected '{expected_word}', but you said '{transcribed_word}'."
+                        "message": f"You said '{got_word}' — the correct word is '{exp_word}'",
                     })
+                    specific_count += 1
+            elif tag == 'delete':
+                for word in expected_words[i1:i2]:
+                    if specific_count >= 5:
+                        break
+                    suggestions.append({
+                        "type": "specific",
+                        "message": f"You missed the word '{word}'",
+                    })
+                    specific_count += 1
 
         return suggestions
     
@@ -206,7 +243,22 @@ class DialogueBusiness:
         base_xp = difficulty * 100
         performance_multiplier = (pronunciation_score + fluency_score) / 2
         return int(base_xp * performance_multiplier)
-    
+
+    @staticmethod
+    def _normalize_words(text: str) -> list:
+        cleaned = re.sub(r"[^\w\s']", '', text.lower())
+        return [w.strip("'") for w in cleaned.split() if w.strip("'")]
+
+    @staticmethod
+    def _calculate_word_accuracy(transcribed_text: str, expected_text: str) -> float:
+        transcribed_words = DialogueBusiness._normalize_words(transcribed_text)
+        expected_words = DialogueBusiness._normalize_words(expected_text)
+        if not expected_words:
+            return 0.0
+        matcher = difflib.SequenceMatcher(None, expected_words, transcribed_words)
+        matches = sum(block.size for block in matcher.get_matching_blocks())
+        return round(min(1.0, matches / len(expected_words)), 4)
+
     @classmethod
     async def _publish_practice_events(
         cls,

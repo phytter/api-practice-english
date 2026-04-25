@@ -12,6 +12,7 @@ class GoogleAudioProcessor(AudioProcessor):
             sample_rate_hertz=48000,
             language_code="en-US",
             enable_word_time_offsets=True,
+            enable_word_confidence=True,
             enable_automatic_punctuation=True,
         )
 
@@ -40,6 +41,6 @@ class GoogleAudioProcessor(AudioProcessor):
                 "word": word_info.word,
                 "start_time": word_info.start_time.total_seconds(),
                 "end_time": word_info.end_time.total_seconds(),
-                "confidence": transcription.confidence
+                "confidence": word_info.confidence,
             } for word_info in transcription.words]
         )
