@@ -4,25 +4,39 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Development Commands
 
+### Virtual Environment
+
+Always activate the venv before running any command. The venv directory is `venv/` at the project root.
+
+```bash
+# Activate existing venv
+source venv/bin/activate
+
+# If venv doesn't exist yet, create and set it up:
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
+pip install -r requirements/develop.txt
+```
+
 ### Running the Application
 ```bash
+source venv/bin/activate
 uvicorn app.main:app --reload
 ```
 The application will be available at `http://127.0.0.1:8000`.
 
 ### Running Tests
 ```bash
+source venv/bin/activate
 pytest
 ```
 
 ### Installing Dependencies
 ```bash
-pip install -r requirements.txt
-```
-
-For development dependencies:
-```bash
-pip install -r requirements/develop.txt
+source venv/bin/activate
+pip install -r requirements.txt          # production deps
+pip install -r requirements/develop.txt  # dev/test deps
 ```
 
 ## Architecture Overview
@@ -83,6 +97,11 @@ The application uses Pydantic Settings (`app/core/config.py`) with environment v
 - **Google Cloud Speech**: Audio processing for pronunciation feedback
 - **OpenSubtitles API**: Movie dialogue retrieval
 - **MongoDB**: Primary database using Motor (async driver)
+
+### Docs
+
+- [`docs/dev-login.md`](docs/dev-login.md) — dev login endpoint (`POST /api/v1/auth/dev-login`), security model, usage, and code path
+- [`docs/DOMAIN_EVENTS.md`](docs/DOMAIN_EVENTS.md) — domain events architecture and flow
 
 ### Current State
 
