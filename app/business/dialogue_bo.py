@@ -92,6 +92,7 @@ class DialogueBusiness:
         result = PracticeResult(
             pronunciation_score=pronunciation_score,
             fluency_score=fluency_score,
+            word_accuracy=word_accuracy,
             transcribed_text=transcription_result.transcribed_text,
             word_timings=transcription_result.words,
             suggestions=suggestions,

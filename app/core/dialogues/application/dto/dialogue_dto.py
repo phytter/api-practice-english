@@ -50,6 +50,7 @@ class DialoguePracticeHistoryOut(DialoguePracticeHistoryIn):
 class PracticeResult(BaseModel):
     pronunciation_score: float
     fluency_score: float
+    word_accuracy: float
     transcribed_text: str
     suggestions: List[dict]
     word_timings: List[dict]
